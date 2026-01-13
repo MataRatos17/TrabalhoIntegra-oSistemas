@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Museu Virtual da Escola - Área Privada</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>🏛️ Museu Virtual da Escola</h1>
+        <nav>
+            <a href="index.html">Exposição</a>
+            <a href="admin.html" class="active">Área Privada</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="admin-hero">
+            <h2>Área de Administração</h2>
+            <p>Adicione novos itens e crie coleções temáticas</p>
+        </section>
+
+        <div class="admin-container">
+            <section class="form-section">
+                <h3>Adicionar Novo Item</h3>
+                <form id="form-adicionar-item">
+                    <div class="form-group">
+                        <label for="titulo">Título:</label>
+                        <input type="text" id="titulo" name="titulo" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descricao">Descrição:</label>
+                        <textarea id="descricao" name="descricao" rows="4" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="categoria">Categoria:</label>
+                        <select id="categoria" name="categoria" required>
+                            <option value="">Selecione...</option>
+                            <option value="Projetos">Projetos</option>
+                            <option value="Fotografias">Fotografias</option>
+                            <option value="Peças Históricas">Peças Históricas</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ano">Ano:</label>
+                        <input type="number" id="ano" name="ano" min="1900" max="2100" value="2024">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="foto">URL da Foto:</label>
+                        <input type="url" id="foto" name="foto" placeholder="https://...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="colecao">Coleção:</label>
+                        <select id="colecao" name="colecao" required>
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Adicionar Item</button>
+                </form>
+            </section>
+
+            <section class="form-section">
+                <h3>Criar Nova Coleção</h3>
+                <form id="form-criar-colecao">
+                    <div class="form-group">
+                        <label for="nome-colecao">Nome da Coleção:</label>
+                        <input type="text" id="nome-colecao" name="nome" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descricao-colecao">Descrição:</label>
+                        <textarea id="descricao-colecao" name="descricao" rows="3" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cor-colecao">Cor (hex):</label>
+                        <input type="color" id="cor-colecao" name="cor" value="#6C757D">
+                    </div>
+
+                    <button type="submit" class="btn-primary">Criar Coleção</button>
+                </form>
+            </section>
+        </div>
+
+        <section class="lista-itens">
+            <h3>Itens Adicionados</h3>
+            <div id="lista-itens-admin" class="itens-grid">
+                <!-- Itens serão listados aqui -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Museu Virtual da Escola</p>
+    </footer>
+
+    <script src="privado.js"></script>
+</body>
+</html>
