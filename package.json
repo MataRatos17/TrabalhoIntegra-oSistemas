@@ -4,14 +4,18 @@
   "description": "Museu Virtual da Escola - Aplicação Web",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node api/server.js",
+    "api:start": "node api/server.js"
   },
-  "keywords": ["museu", "escola", "virtual"],
+  "keywords": [
+    "museu",
+    "escola",
+    "virtual"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "express": "^4.22.1"
   }
 }
