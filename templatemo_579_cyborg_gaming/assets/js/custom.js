@@ -1,4 +1,4 @@
-(function ($) {
+	(function ($) {
 	
 	"use strict";
 
@@ -11,8 +11,8 @@
 
 	// WOW JS
 	$(window).on ('load', function (){
-        if ($(".wow").length) { 
-            var wow = new WOW ({
+		if (window.WOW && $(".wow").length) { 
+			var wow = new WOW ({
                 boxClass:     'wow',      // Animated element css class (default is wow)
                 animateClass: 'animated', // Animation css class (default is animated)
                 offset:       20,         // Distance to the element when triggering the animation (default is 0)
@@ -24,34 +24,34 @@
     });
 
 	$(window).scroll(function() {
-	  var scroll = $(window).scrollTop();
-	  var box = $('.header-text').height();
-	  var header = $('header').height();
+	var scroll = $(window).scrollTop();
+	var box = $('.header-text').height();
+	var header = $('header').height();
 
-	  if (scroll >= box - header) {
+	if (scroll >= box - header) {
 	    $("header").addClass("background-header");
-	  } else {
+	} else {
 	    $("header").removeClass("background-header");
-	  }
+	}
 	});
 	
 	$('.filters ul li').click(function(){
         $('.filters ul li').removeClass('active');
         $(this).addClass('active');
-          
-          var data = $(this).attr('data-filter');
-          $grid.isotope({
+        
+        var data = $(this).attr('data-filter');
+        $grid.isotope({
             filter: data
-          })
+        })
         });
 
-        var $grid = $(".grid").isotope({
-          	itemSelector: ".all",
-          	percentPosition: true,
-          	masonry: {
-            columnWidth: ".all"
-        }
-    })
+		var $grid = $(".grid").isotope({
+			itemSelector: ".all",
+			percentPosition: true,
+			masonry: {
+				columnWidth: ".all"
+			}
+		});
 
 	var width = $(window).width();
 		$(window).resize(function() {
@@ -90,16 +90,16 @@
 		autoplay: true,
 		margin:30,
 		responsive:{
-			  0:{
-				  items:1
-			  },
-			  600:{
-				  items:2
-			  },
-			  1200:{
-				  items:3
-			  },
-			  1800:{
+			0:{
+				items:1
+			},
+			600:{
+				items:2
+			},
+			1200:{
+				items:3
+			},
+			1800:{
 				items:3
 			}
 		}
@@ -113,14 +113,14 @@
 		autoplay: true,
 		margin:30,
 		responsive:{
-			  0:{
-				  items:1
-			  },
-			  800:{
-				  items:2
-			  },
-			  1000:{
-				  items:3
+			0:{
+				items:1
+			},
+			800:{
+				items:2
+			},
+			1000:{
+				items:3
 			}
 		}
 	})
@@ -133,14 +133,14 @@
 		autoplay: true,
 		margin:30,
 		responsive:{
-			  0:{
-				  items:1
-			  },
-			  600:{
-				  items:1
-			  },
-			  1000:{
-				  items:1
+			0:{
+				items:1
+			},
+			600:{
+				items:1
+			},
+			1000:{
+				items:1
 			}
 		}
 	})
@@ -189,14 +189,14 @@
 	            $(this).removeClass('active');
 	        })
 	        $(this).addClass('active');
-	      
-	        var target = this.hash,
-	        menu = target;
-	       	var target = $(this.hash);
+	    
+			var targetHash = this.hash,
+				menu = targetHash;
+			var target = $(targetHash);
 	        $('html, body').stop().animate({
 	            scrollTop: (target.offset().top) - 79
 	        }, 500, 'swing', function () {
-	            window.location.hash = target;
+				window.location.hash = targetHash;
 	            $(document).on("scroll", onScroll);
 	        });
 	    });
@@ -206,8 +206,9 @@
 	    var scrollPos = $(document).scrollTop();
 	    $('.nav a').each(function () {
 	        var currLink = $(this);
-	        var refElement = $(currLink.attr("href"));
-	        if (refElement.position().top <= scrollPos && refElement.position().top + refElement.height() > scrollPos) {
+	        var ref = currLink.attr("href");
+	        var refElement = ref && ref.startsWith('#') ? $(ref) : $();
+	        if (refElement.length && refElement.position().top <= scrollPos && refElement.position().top + refElement.height() > scrollPos) {
 	            $('.nav ul li a').removeClass("active");
 	            currLink.addClass("active");
 	        }
@@ -220,7 +221,7 @@
 
 	// Page loading animation
 	$(window).on('load', function() {
-		if($('.cover').length){
+		if($.fn.parallax && $('.cover').length){
 			$('.cover').parallax({
 				imageSrc: $('.cover').data('image'),
 				zIndex: '1'
@@ -235,6 +236,20 @@
 			}, 300);
 		});
 	});
+
+	// Global handler for search input Enter key
+	window.handle = function(e) {
+		var key = e && (e.key || e.keyCode);
+		var isEnter = key === 'Enter' || key === 13;
+		if (isEnter) {
+			if (e && e.preventDefault) { e.preventDefault(); } else { e.returnValue = false; }
+			var input = document.getElementById('searchText');
+			var q = input && input.value ? input.value.trim() : '';
+			if (q) {
+				window.location.href = 'browse.html?q=' + encodeURIComponent(q);
+			}
+		}
+	};
 
 	
 
@@ -280,3 +295,39 @@
 
 
 })(window.jQuery);
+
+// API helper centralizado em /met (fora do bloco principal)
+(function(){
+	var BASE = 'http://localhost:3001/met';
+	function buildUrl(path, params){
+		var url = BASE + (path && path.charAt(0) !== '/' ? '/' + path : (path || ''));
+		if (params && typeof params === 'object'){
+			var sp = new URLSearchParams();
+			Object.keys(params).forEach(function(k){
+				if (params[k] !== undefined && params[k] !== null) sp.append(k, params[k]);
+			});
+			var qs = sp.toString();
+			if (qs) url += (url.indexOf('?') === -1 ? '?' : '&') + qs;
+		}
+		return url;
+	}
+	window.api = {
+		baseUrl: BASE,
+		fetchJson: function(path, params){
+			var url = buildUrl(path, params);
+			return fetch(url, { headers: { 'Accept': 'application/json' } })
+				.then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+		},
+		games: function(params){ return this.fetchJson('games', params); },
+		streams: function(params){ return this.fetchJson('streams', params); },
+		all: function(){ return this.fetchJson('data'); },
+		health: function(){ return this.fetchJson('health'); }
+	};
+	if (typeof window.fetch === 'function'){
+		window.api.health().then(function(h){
+			console.log('[API /met] health:', h);
+		}).catch(function(err){
+			console.warn('[API /met] indisponível. Inicie o servidor da API.', err);
+		});
+	}
+})();
