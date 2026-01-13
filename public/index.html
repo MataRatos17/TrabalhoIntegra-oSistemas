@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Museu Virtual da Escola - Exposição</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>🏛️ Museu Virtual da Escola</h1>
+        <nav>
+            <a href="index.html" class="active">Exposição</a>
+            <a href="admin.html">Área Privada</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h2>Bem-vindo à Exposição Virtual</h2>
+            <p>Explore os projetos, fotografias e peças históricas da nossa escola</p>
+        </section>
+
+        <section class="filtros">
+            <h3>Filtrar por Coleção:</h3>
+            <div id="filtros-colecoes" class="filtros-buttons">
+                <button class="filtro-btn active" data-colecao="todas">Todas</button>
+            </div>
+        </section>
+
+        <section class="galeria">
+            <h2>Itens em Exposição</h2>
+            <div id="itens-container" class="itens-grid">
+                <!-- Itens serão carregados aqui via JavaScript -->
+            </div>
+        </section>
+
+        <section class="api-publica">
+            <h2>Obras de Arte de Museus Públicos</h2>
+            <p class="subtitulo">Integração com API pública do Metropolitan Museum of Art</p>
+            <div id="obras-arte-container" class="obras-grid">
+                <!-- Obras de arte serão carregadas aqui -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Museu Virtual da Escola</p>
+    </footer>
+
+    <script src="publico.js"></script>
+</body>
+</html>

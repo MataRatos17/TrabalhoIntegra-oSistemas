@@ -1,0 +1,403 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+}
+
+header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+header h1 {
+    margin-bottom: 1rem;
+    font-size: 2rem;
+}
+
+nav {
+    display: flex;
+    gap: 1rem;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+nav a:hover, nav a.active {
+    background-color: rgba(255,255,255,0.2);
+}
+
+main {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+.hero, .admin-hero {
+    text-align: center;
+    padding: 3rem 0;
+    background: white;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.hero h2, .admin-hero h2 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: #667eea;
+}
+
+.filtros {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.filtros h3 {
+    margin-bottom: 1rem;
+    color: #667eea;
+}
+
+.filtros-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.filtro-btn {
+    padding: 0.5rem 1rem;
+    border: 2px solid #667eea;
+    background: white;
+    color: #667eea;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.filtro-btn:hover, .filtro-btn.active {
+    background: #667eea;
+    color: white;
+}
+
+.galeria, .lista-itens, .lista-colecoes {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.lista-colecoes h3, .lista-itens h3 {
+    margin-bottom: 1.5rem;
+    color: #667eea;
+}
+
+.colecoes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.colecao-card {
+    background: #f9f9f9;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.colecao-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.colecao-card h3 {
+    color: #667eea;
+    margin-bottom: 0.5rem;
+}
+
+.colecao-card .descricao {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.acoes {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e0e0e0;
+}
+
+.btn-apagar {
+    background: #e74c3c;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    width: 100%;
+}
+
+.btn-apagar:hover {
+    background: #c0392b;
+}
+
+.item-card .acoes {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #e0e0e0;
+}
+
+.item-card .btn-apagar {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+}
+
+.galeria h2, .lista-itens h3 {
+    margin-bottom: 1.5rem;
+    color: #667eea;
+}
+
+.itens-grid, .obras-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.item-card, .obra-card {
+    background: #f9f9f9;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.item-card:hover, .obra-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.item-card img, .obra-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    background: #f0f0f0;
+}
+
+.sem-imagem-placeholder {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+}
+
+.sem-imagem-placeholder span {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.sem-imagem-placeholder p {
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.item-card.sem-imagem img {
+    display: none;
+}
+
+.item-card.sem-imagem::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+}
+
+.item-card .conteudo, .obra-card .conteudo {
+    padding: 1rem;
+}
+
+.item-card h3, .obra-card h3 {
+    color: #667eea;
+    margin-bottom: 0.5rem;
+}
+
+.item-card .categoria, .obra-card .artista {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: #667eea;
+    color: white;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.item-card .descricao, .obra-card .data {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.item-card .ano {
+    color: #999;
+    font-size: 0.85rem;
+}
+
+.api-publica {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.api-publica h2 {
+    color: #667eea;
+    margin-bottom: 0.5rem;
+}
+
+.subtitulo {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.admin-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.form-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.form-section h3 {
+    color: #667eea;
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.help-text {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #666;
+    line-height: 1.6;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border-left: 3px solid #667eea;
+}
+
+.help-text strong {
+    color: #333;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background: #5568d3;
+}
+
+.mensagem {
+    padding: 1rem;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+}
+
+.mensagem.sucesso {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.mensagem.erro {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+footer {
+    text-align: center;
+    padding: 2rem;
+    background: #333;
+    color: white;
+    margin-top: 3rem;
+}
+
+@media (max-width: 768px) {
+    .admin-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .itens-grid, .obras-grid {
+        grid-template-columns: 1fr;
+    }
+}
