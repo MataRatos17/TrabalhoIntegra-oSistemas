@@ -148,7 +148,7 @@ function criarCardItem(item) {
     const urlImagem = validarUrlImagem(item.foto);
     const imagemHtml = urlImagem 
         ? `<img src="${urlImagem}" alt="${item.titulo}" loading="lazy" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'300\'%3E%3Crect fill=\'%23ddd\' width=\'400\' height=\'300\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23999\' font-family=\'Arial\' font-size=\'16\'%3ESem Imagem%3C/text%3E%3C/svg%3E'; this.parentElement.classList.add('sem-imagem');">`
-        : `<div class="sem-imagem-placeholder"><span>📷</span><p>Sem imagem</p></div>`;
+        : `<div class="sem-imagem-placeholder"><span></span><p>Sem imagem</p></div>`;
     
     card.innerHTML = `
         ${imagemHtml}
