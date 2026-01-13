@@ -4,8 +4,8 @@
   "description": "Museu Virtual da Escola - Aplicação Web",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node api/server.js",
+    "api:start": "node api/server.js"
   },
   "keywords": [
     "museu",
