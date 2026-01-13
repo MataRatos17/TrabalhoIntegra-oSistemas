@@ -11,6 +11,25 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Rotas de saúde/boas-vindas
+app.get('/', (req, res) => {
+    res.send('Museu API ativa. Use os endpoints em /api');
+});
+
+app.get('/api', (req, res) => {
+    res.json({
+        ok: true,
+        mensagem: 'Museu API ativa',
+        endpoints: [
+            '/api/itens',
+            '/api/itens/:id',
+            '/api/colecoes',
+            '/api/colecoes/:nome/itens',
+            '/api/arte-publica'
+        ]
+    });
+});
+
 // Carregar dados iniciais do ficheiro JSON
 let dadosMuseu = null;
 
