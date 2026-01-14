@@ -1,36 +1,55 @@
 // =============================
 // CONFIGURACAO DA AREA PRIVADA
 // =============================
+// Este ficheiro controla TUDO o que acontece na area de administracao
+// (admin.html). A ideia geral do fluxo e:
+// 1) Primeiro confirmar se o utilizador fez login com o Google
+//    - Se NAO estiver autenticado, entao NAO pode ver a pagina admin
+//      e e redirecionado imediatamente para login.html.
+// 2) Se estiver autenticado, quando o DOM estiver pronto carregamos:
+//    - As colecoes (para selects e listagens)
+//    - Os itens existentes
+//    - A lista de colecoes na parte de gestao
+//    - Os handlers dos formularios (criar item, criar colecao, editar, etc.).
+// 3) Tambem configuramos o botao de "Terminar sessao" para limpar o login.
 
 // URL base da API Node (back-end) onde estão os endpoints /api/...
 const API_URL = 'http://localhost:3000/api';
 
 // Mesmas chaves usadas em login.js para guardar o login Google
+// Se estas chaves nao existirem no localStorage, significa que o utilizador
+// ainda nao fez login nesta sessao.
 const STORAGE_TOKEN_KEY = 'google_token';
 const STORAGE_USER_KEY = 'google_user';
 
-// Verificar se o utilizador está autenticado antes de carregar a página
-// Se não existir token no localStorage, redireciona para a página de login
+// 1) Verificar se o utilizador está autenticado antes de carregar a página
+// Se NAO existir token no localStorage:
+//    -> significa que o utilizador nao fez login Google
+//    -> entao NAO permitimos ver admin.html e redirecionamos para login.html
 if (!localStorage.getItem(STORAGE_TOKEN_KEY)) {
     window.location.href = 'login.html';
 }
 
-// Ao carregar o DOM, inicializamos a área de administração
-// (carrega coleções, itens, configura formulários e botão de logout)
+// 2) Ao carregar o DOM, inicializamos a área de administração
+//    (carrega coleções, itens, configura formulários e botão de logout)
 document.addEventListener('DOMContentLoaded', () => {
-    carregarColecoes();
-    carregarItens();
-    carregarListaColecoes();
-    configurarFormularios();
+    // Se o utilizador chegou aqui, e porque passou na verificacao do token
+    // Entao podemos carregar os dados da API e preparar os formularios.
+    carregarColecoes();          // Preenche o select de colecao do formulario
+    carregarItens();             // Mostra a lista de itens ja existentes
+    carregarListaColecoes();     // Lista as colecoes criadas na parte inferior
+    configurarFormularios();     // Liga os eventos dos formularios (submit)
 
     // Configura o botão "Terminar sessão" no cabeçalho
     const btnLogout = document.getElementById('btn-logout');
+    // Se o botão existir no HTML, então ligamos o evento de clique
     if (btnLogout) {
         btnLogout.addEventListener('click', () => {
-            // Remove token e dados do utilizador do armazenamento local
+            // Quando o utilizador clica em "Terminar sessão":
+            // 1) Remove token e dados do utilizador do armazenamento local
             localStorage.removeItem(STORAGE_TOKEN_KEY);
             localStorage.removeItem(STORAGE_USER_KEY);
-            // Volta para a página de login
+            // 2) Volta para a página de login para forçar novo login Google
             window.location.href = 'login.html';
         });
     }
@@ -38,6 +57,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /**
  * Carrega as coleções para o select do formulário
+ *
+ * Fluxo:
+ * - Pede à API a lista de coleções criadas.
+ * - Se a resposta for OK, entao:
+ *      -> Limpa o select
+ *      -> Cria uma option "Selecione..."
+ *      -> Adiciona uma option para cada colecao existente.
+ * - Se der erro na API, mostra mensagem de erro ao utilizador.
  */
 async function carregarColecoes() {
     try {
@@ -60,7 +87,13 @@ async function carregarColecoes() {
 }
 
 /**
- * Carrega todos os itens para exibir na lista
+ * Carrega todos os itens para exibir na lista de administração
+ *
+ * Fluxo:
+ * - Faz um GET para /api/itens.
+ * - Se a API responder com sucesso, entao chama exibirItensAdmin
+ *   para desenhar os cards na parte de baixo da admin.
+ * - Se der erro, escreve na consola e mostra mensagem de erro.
  */
 async function carregarItens() {
     try {
@@ -76,6 +109,17 @@ async function carregarItens() {
 
 /**
  * Configura os event listeners dos formulários
+ *
+ * Ideia:
+ * - Em vez de usar o comportamento padrao do form (enviar e recarregar pagina),
+ *   interceptamos o submit, fazemos e.preventDefault() e chamamos funcoes JS
+ *   que vao falar com a API.
+ *
+ * - Se o utilizador carregar em "Adicionar Item", entao:
+ *      -> chamamos adicionarItem(), que valida os campos e faz POST /api/itens.
+ * - Se carregar em "Criar Coleção", entao:
+ *      -> chamamos criarColecao(), que valida e faz POST /api/colecoes.
+ * - Nos formularios de edicao, fazemos o mesmo com PUT.
  */
 function configurarFormularios() {
     const formItem = document.getElementById('form-adicionar-item');
@@ -106,6 +150,27 @@ function configurarFormularios() {
 
 /**
  * Adiciona um novo item ao museu
+ *
+ * Fluxo resumido em "se isto, então aquilo":
+ * 1) Le os valores dos campos do formulario e faz trim (remove espaços).
+ * 2) Se algum dos campos obrigatorios (titulo, descricao, categoria, colecao)
+ *    estiver vazio, entao:
+ *       -> mostra mensagem de erro
+ *       -> NAO envia nada para a API.
+ * 3) Se o ano estiver vazio ou nao for numero, entao mostra erro e para.
+ * 4) Se o ano for inferior a 1900 ou maior que 2100, entao mostra erro e para.
+ * 5) Se o utilizador escreveu uma URL de foto:
+ *       -> chamamos validarUrlImagem(urlFoto).
+ *       -> Se a funcao devolver null (URL invalida), entao mostramos erro e paramos.
+ * 6) Se todas as validacoes passarem, entao:
+ *       -> construimos o objeto formData
+ *       -> fazemos POST /api/itens para a API.
+ * 7) Se a API responder com sucesso (resposta.ok):
+ *       -> mostramos mensagem de sucesso
+ *       -> limpamos o formulario
+ *       -> recarregamos a lista de itens e colecoes.
+ *    Caso contrario:
+ *       -> lemos a mensagem de erro da API e mostramos ao utilizador.
  */
 async function adicionarItem() {
     try {
@@ -176,6 +241,15 @@ async function adicionarItem() {
 
 /**
  * Cria uma nova coleção
+ *
+ * Fluxo:
+ * - Le o nome, descricao e cor do formulario.
+ * - Se nome OU descricao estiverem vazios, entao mostra erro e nao envia.
+ * - Se estiver tudo preenchido, constroi formData e faz POST /api/colecoes.
+ * - Se a API devolver sucesso, entao:
+ *      -> mostra mensagem "Coleção criada com sucesso!"
+ *      -> limpa o formulario
+ *      -> recarrega select de colecoes e lista de colecoes.
  */
 async function criarColecao() {
     try {
@@ -221,6 +295,11 @@ async function criarColecao() {
 
 /**
  * Exibe os itens na área de administração
+ *
+ * - Se o array de itens vier vazio, entao mostra uma mensagem
+ *   "Nenhum item adicionado ainda".
+ * - Caso contrario, ordena os itens por ID (mais recentes primeiro)
+ *   e cria um card para cada um com criarCardItem().
  */
 function exibirItensAdmin(itens) {
     const container = document.getElementById('lista-itens-admin');
@@ -242,6 +321,13 @@ function exibirItensAdmin(itens) {
 
 /**
  * Valida e corrige URL de imagem
+ *
+ * Regras principais:
+ * - Se a string estiver vazia, entao devolve null (sem imagem).
+ * - Se for URL do Pinterest tipo pagina (pinterest.com), entao devolve null
+ *   porque nao da para usar paginas HTML como src de <img>.
+ * - Se for URL direta (pinimg.com) ou de servico de imagens conhecido, entao aceita.
+ * - Se a URL nao for valida ou lanca excecao no new URL(...), devolve null.
  */
 function validarUrlImagem(url) {
     if (!url || url.trim() === '') {
@@ -281,7 +367,11 @@ function validarUrlImagem(url) {
 }
 
 /**
- * Carrega todas as coleções para exibir na lista
+ * Carrega todas as coleções para exibir na lista da área admin
+ *
+ * - Faz GET /api/colecoes.
+ * - Se der certo, chama exibirColecoesAdmin para desenhar os cards.
+ * - Se der erro, mostra mensagem de erro.
  */
 async function carregarListaColecoes() {
     try {
@@ -297,6 +387,9 @@ async function carregarListaColecoes() {
 
 /**
  * Exibe as coleções na área de administração
+ *
+ * - Se nao houver colecoes, entao mostra texto "Nenhuma coleção criada ainda".
+ * - Caso contrario, cria um card (criarCardColecao) para cada colecao.
  */
 function exibirColecoesAdmin(colecoes) {
     const container = document.getElementById('lista-colecoes-admin');
@@ -317,6 +410,11 @@ function exibirColecoesAdmin(colecoes) {
 
 /**
  * Cria um card para exibir uma coleção na área admin
+ *
+ * - Mostra o nome e descricao da coleção.
+ * - Mostra dois botoes:
+ *      -> "Editar": abre o modal de edicao, passando os dados da colecao.
+ *      -> "Apagar": chama apagarColecao(id, nome) com confirmacao.
  */
 function criarCardColecao(colecao) {
     const card = document.createElement('div');
@@ -347,6 +445,11 @@ function criarCardColecao(colecao) {
 
 /**
  * Cria um card para exibir um item na área admin
+ *
+ * - Se a URL da imagem for valida, mostra a imagem; caso contrario,
+ *   mostra um placeholder "Sem imagem".
+ * - Mostra titulo, categoria, descricao, ano, colecao e ID do item.
+ * - Disponibiliza botoes de "Editar" (abre modal) e "Apagar" (chama apagarItem).
  */
 function criarCardItem(item) {
     const card = document.createElement('div');
@@ -382,6 +485,14 @@ function criarCardItem(item) {
 
 /**
  * Apaga um item
+ *
+ * Fluxo:
+ * - Primeiro mostra um confirm() para ter a certeza.
+ *   Se o utilizador clicar em Cancelar, entao NAO faz nada.
+ * - Se o utilizador confirmar:
+ *      -> faz DELETE /api/itens/:id.
+ *      -> Se a API responder ok, mostra mensagem de sucesso e recarrega itens.
+ *      -> Se der erro, mostra a mensagem devolvida pela API.
  */
 window.apagarItem = async function(id, titulo) {
     if (!confirm(`Tem certeza que deseja apagar o item "${titulo}"?\n\nEsta ação não pode ser desfeita.`)) {
@@ -408,6 +519,12 @@ window.apagarItem = async function(id, titulo) {
 
 /**
  * Apaga uma coleção
+ *
+ * Fluxo:
+ * - Mostra um confirm() explicando que so pode apagar colecoes sem itens.
+ * - Se o utilizador cancelar, entao nao faz nada.
+ * - Se confirmar, faz DELETE /api/colecoes/:id.
+ * - Se a API devolver sucesso, recarrega as listas; se nao, mostra erro.
  */
 window.apagarColecao = async function(id, nome) {
     if (!confirm(`Tem certeza que deseja apagar a coleção "${nome}"?\n\nNota: Só é possível apagar coleções que não tenham itens associados.\n\nEsta ação não pode ser desfeita.`)) {
@@ -435,6 +552,10 @@ window.apagarColecao = async function(id, nome) {
 
 /**
  * Abre o modal para editar um item
+ *
+ * - Primeiro carrega as colecoes da API para o select de edicao.
+ * - Depois preenche os campos do modal com os dados do item recebido.
+ * - No final, torna o modal visivel (display = 'block').
  */
 window.abrirModalEditarItem = async function(item) {
     // Carregar as coleções para o select
@@ -476,6 +597,11 @@ window.fecharModalEditarItem = function() {
 
 /**
  * Guarda as alterações do item
+ *
+ * - Valida novamente a URL da foto (para evitar URL invalida apos edicao).
+ * - Se for invalida, mostra erro e nao envia.
+ * - Se for valida, constroi objeto itemAtualizado e faz PUT /api/itens/:id.
+ * - Se a API responder ok, fecha o modal e recarrega a lista de itens.
  */
 async function guardarEdicaoItem() {
     try {
@@ -526,6 +652,9 @@ async function guardarEdicaoItem() {
 
 /**
  * Abre o modal para editar uma coleção
+ *
+ * - Preenche os campos do modal com os dados da colecao passada.
+ * - Depois mostra o modal na tela para o utilizador poder alterar.
  */
 window.abrirModalEditarColecao = function(colecao) {
     document.getElementById('editar-colecao-id').value = colecao.id;
@@ -546,6 +675,10 @@ window.fecharModalEditarColecao = function() {
 
 /**
  * Guarda as alterações da coleção
+ *
+ * - Lê os dados editados, monta o objeto colecaoAtualizada
+ *   e faz PUT /api/colecoes/:id na API.
+ * - Se a API devolver sucesso, fecha o modal e recarrega listas.
  */
 async function guardarEdicaoColecao() {
     try {
@@ -586,6 +719,11 @@ async function guardarEdicaoColecao() {
 
 /**
  * Mostra uma mensagem de feedback ao utilizador
+ *
+ * - Remove mensagens anteriores para nao acumular muitas caixas.
+ * - Cria um div com a classe "mensagem" e o tipo (sucesso/erro).
+ * - Insere a mensagem no topo do <main>.
+ * - Depois de 5 segundos, remove automaticamente a mensagem.
  */
 function mostrarMensagem(texto, tipo) {
     // Remover mensagens anteriores

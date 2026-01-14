@@ -1,16 +1,42 @@
+// ================================
+// LADO PUBLICO DO SITE (EXPOSICAO)
+// ================================
+// Este ficheiro contém o JavaScript da página index.html.
+// Responsabilidades principais:
+// - Pedir à API os itens e coleções do museu
+// - Mostrar os cartões de itens na galeria
+// - Filtrar por coleção
+// - Carregar obras de arte da API pública (Met) e artistas
+
+// URL base da API interna do museu
 const API_URL = 'http://localhost:3000/api';
 
-// Carregar itens e coleções ao iniciar a página
+// Quando o DOM estiver pronto, carrega os dados iniciais.
+// FLUXO:
+// - SE a página carregar corretamente ENTÃO buscamos de imediato:
+//   1) Coleções (para os botões de filtro)
+//   2) Itens (para a galeria principal)
+//   3) Obras da API pública
+//   4) Lista de artistas da API pública
 document.addEventListener('DOMContentLoaded', () => {
-    carregarColecoes();
-    carregarItens();
-    carregarObrasArtePublica();
-    carregarArtistas();
+    carregarColecoes();          // Botões de filtro por coleção
+    carregarItens();             // Itens da exposição
+    carregarObrasArtePublica();  // Obras vindas da API pública
+    carregarArtistas();          // Lista de artistas para o select
 });
 
-/**
- * Carrega lista de artistas vindos da API pública e popula a combobox
- */
+// ------------------------------
+// ARTISTAS E OBRAS DA API PUBLICA
+// ------------------------------
+// Carrega lista de artistas vindos da API pública e popula a combobox.
+// FLUXO:
+// - Fazemos um pedido à API interna /arte-publica/artistas.
+// - SE o pedido for bem sucedido ENTÃO limpamos o select, criamos a opção "Todos"
+//   e depois adicionamos uma option por cada artista.
+// - Adicionamos um listener ao select:
+//   * SE o utilizador escolher "Todos" ENTÃO voltamos a carregar todas as obras.
+//   * SE escolher um artista específico ENTÃO chamamos carregarObrasPorArtista.
+// - SE acontecer algum erro ENTÃO mostramos uma mensagem de erro no próprio select.
 async function carregarArtistas() {
     const select = document.getElementById('select-artistas');
     try {
@@ -32,6 +58,8 @@ async function carregarArtistas() {
 
         select.addEventListener('change', () => {
             const val = select.value;
+            // SE o valor estiver vazio ("Todos") ENTÃO mostramos todas as obras disponíveis.
+            // SE tiver um nome de artista ENTÃO filtramos as obras para esse artista.
             if (!val) {
                 carregarObrasArtePublica();
             } else {
@@ -45,7 +73,12 @@ async function carregarArtistas() {
 }
 
 /**
- * Carrega até 6 obras de um artista selecionado
+ * Carrega até 6 obras de um artista selecionado.
+ * FLUXO:
+ * - Fazemos um pedido ao endpoint /arte-publica/por-artista.
+ * - SE a resposta HTTP não for ok ENTÃO mostramos mensagem de "Nenhuma obra".
+ * - SE o array devolvido estiver vazio ENTÃO também avisamos que não há obras.
+ * - CASO CONTRÁRIO, chamamos exibirObrasArte para desenhar os cartões.
  */
 async function carregarObrasPorArtista(artista) {
     const container = document.getElementById('obras-arte-container');
@@ -74,9 +107,16 @@ async function carregarObrasPorArtista(artista) {
     }
 }
 
-/**
- * Carrega todas as coleções e cria os botões de filtro
- */
+// ------------------------------
+// COLECOES E ITENS DO MUSEU
+// ------------------------------
+// Carrega todas as coleções e cria os botões de filtro.
+// FLUXO:
+// - Fazemos GET /colecoes.
+// - SE a chamada tiver sucesso ENTÃO para cada coleção criamos um botão:
+//   * Ao clicar, removemos a classe active de todos, marcamos o clicado,
+//     e chamamos carregarItens (todas) ou filtrarPorColecao (específica).
+// - SE der erro na chamada ENTÃO mostramos mensagem de erro.
 async function carregarColecoes() {
     try {
         const resposta = await fetch(`${API_URL}/colecoes`);
@@ -93,15 +133,16 @@ async function carregarColecoes() {
             botao.style.color = colecao.cor;
             
             botao.addEventListener('click', () => {
-                // Remover classe active de todos os botões
+                // Primeiro, removemos a seleção (active) de todos os botões.
                 document.querySelectorAll('.filtro-btn').forEach(btn => {
                     btn.classList.remove('active');
                 });
                 
-                // Adicionar classe active ao botão clicado
+                // Depois, marcamos APENAS o botão clicado como ativo.
                 botao.classList.add('active');
                 
-                // Filtrar itens
+                // SE o nome da coleção for "todas" ENTÃO voltamos a carregar todos os itens.
+                // CASO CONTRÁRIO, chamamos filtrarPorColecao para mostrar só essa coleção.
                 if (colecao.nome === 'todas') {
                     carregarItens();
                 } else {
@@ -162,9 +203,10 @@ function exibirItens(itens) {
     });
 }
 
-/**
- * Valida e corrige URL de imagem
- */
+// ------------------------------
+// FUNCOES DE APOIO (URL, CARDS, MENSAGENS)
+// ------------------------------
+// Valida e corrige URL de imagem
 function validarUrlImagem(url) {
     if (!url || url.trim() === '') {
         return null;

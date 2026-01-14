@@ -1,17 +1,32 @@
-const express = require('express');
-const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
-const https = require('https');
+// =============================
+// API DO MUSEU VIRTUAL (BACK-END)
+// =============================
+// Este ficheiro implementa a API em Node/Express que:
+// - Lê e grava os dados num ficheiro JSON (data/museu.json)
+// - Expõe endpoints públicos para o site (itens, coleções)
+// - Expõe endpoints privados para administração (CRUD)
+// - Integra com a API pública do Metropolitan Museum of Art
+
+const express = require('express');   // Framework web
+const cors = require('cors');         // Permitir pedidos de outros domínios (frontend)
+const fs = require('fs');             // Ler/gravar ficheiros
+const path = require('path');         // Construir caminhos independentes do SO
+const https = require('https');       // Fazer pedidos HTTPS à API pública
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000; // Porta da API (por omissão 3000)
 
-// Middleware
+// ------------------------------
+// MIDDLEWARE GLOBAL
+// ------------------------------
+// Ativa CORS e parsing automático de JSON no corpo dos pedidos
 app.use(cors());
 app.use(express.json());
 
-// Rotas de saúde/boas-vindas
+// ------------------------------
+// ROTAS DE SAUDE / INFORMACAO
+// ------------------------------
+// Endpoint simples para testar se a API está a responder
 app.get('/', (req, res) => {
     res.send('Museu API ativa. Use os endpoints em /api');
 });
@@ -30,7 +45,10 @@ app.get('/api', (req, res) => {
     });
 });
 
-// Carregar dados iniciais do ficheiro JSON
+// ------------------------------
+// CARREGAR E GUARDAR DADOS EM FICHEIRO
+// ------------------------------
+// Estrutura em memória (itens e coleções) carregada de data/museu.json
 let dadosMuseu = null;
 
 function carregarDados() {
@@ -61,9 +79,14 @@ function guardarDados() {
     }
 }
 
-// ========== ENDPOINTS PÚBLICOS ==========
+// ==================================
+// ENDPOINTS PUBLICOS (USADOS NO SITE)
+// ==================================
 
 // Obter todos os itens (página pública)
+// FLUXO:
+// - SE conseguirmos aceder ao array dadosMuseu.itens ENTÃO devolvemos esse array em JSON.
+// - SE ocorrer algum erro inesperado ENTÃO devolvemos status 500 com mensagem de erro.
 app.get('/api/itens', (req, res) => {
     try {
         res.json(dadosMuseu.itens);
@@ -73,6 +96,11 @@ app.get('/api/itens', (req, res) => {
 });
 
 // Obter item por ID
+// FLUXO:
+// - Lemos o id da rota (/api/itens/:id).
+// - Procuramos no array de itens.
+//   * SE encontrarmos um item com esse id ENTÃO devolvemos o item em JSON.
+//   * SE não encontrarmos ENTÃO devolvemos 404 com mensagem "Item não encontrado".
 app.get('/api/itens/:id', (req, res) => {
     try {
         const id = parseInt(req.params.id);
@@ -89,6 +117,9 @@ app.get('/api/itens/:id', (req, res) => {
 });
 
 // Obter todas as coleções
+// FLUXO:
+// - SE a leitura do array em memória correr bem ENTÃO devolvemos o array completo.
+// - SE algo falhar ENTÃO respondemos com 500.
 app.get('/api/colecoes', (req, res) => {
     try {
         res.json(dadosMuseu.colecoes);
@@ -98,6 +129,10 @@ app.get('/api/colecoes', (req, res) => {
 });
 
 // Obter itens por coleção
+// FLUXO:
+// - Lemos o nome da coleção da rota.
+// - Filtramos o array de itens por item.colecao === nomeColecao.
+// - Devolvemos SEMPRE o array filtrado (mesmo que vazio), ou 500 em caso de erro.
 app.get('/api/colecoes/:nome/itens', (req, res) => {
     try {
         const nomeColecao = req.params.nome;
@@ -110,9 +145,19 @@ app.get('/api/colecoes/:nome/itens', (req, res) => {
     }
 });
 
-// ========== ENDPOINTS PRIVADOS ==========
+// ===================================
+// ENDPOINTS PRIVADOS (AREA ADMIN)
+// ===================================
 
-// Adicionar novo item
+// Adicionar novo item (usado na área de administração)
+// FLUXO PRINCIPAL:
+// 1) Lemos o corpo do pedido (req.body) para obter o novo item.
+// 2) Fazemos trim às principais strings para evitar espaços em branco.
+// 3) SE algum dos campos obrigatórios (titulo, descricao, categoria, colecao)
+//    ficar vazio após o trim ENTÃO devolvemos 400 com mensagem de dados incompletos.
+// 4) SE estiver tudo preenchido ENTÃO geramos um novo ID, definimos ano (se vier vazio)
+//    e garantimos que foto pelo menos existe como string (pode ser vazia).
+// 5) Adicionamos o item ao array, guardamos no ficheiro e devolvemos 201 com o item.
 app.post('/api/itens', (req, res) => {
     try {
         const novoItem = req.body;
@@ -149,7 +194,13 @@ app.post('/api/itens', (req, res) => {
     }
 });
 
-// Criar nova coleção
+// Criar nova coleção (usado na área de administração)
+// FLUXO PRINCIPAL:
+// 1) Lemos o corpo do pedido e fazemos trim ao nome e descrição.
+// 2) SE nome ou descrição ficarem vazios ENTÃO devolvemos 400 (dados incompletos).
+// 3) Verificamos SE já existe coleção com o mesmo nome; se existir devolvemos 400.
+// 4) SE tudo estiver correto ENTÃO geramos um novo ID, definimos uma cor (ou padrão),
+//    guardamos no array e persistimos no ficheiro, devolvendo 201 com a coleção criada.
 app.post('/api/colecoes', (req, res) => {
     try {
         const novaColecao = req.body;
@@ -186,9 +237,18 @@ app.post('/api/colecoes', (req, res) => {
     }
 });
 
-// ========== ENDPOINTS PARA ATUALIZAR ==========
+// ===================================
+// ENDPOINTS PARA ATUALIZAR (PUT)
+// ===================================
 
-// Atualizar item
+// Atualizar item (PUT)
+// FLUXO PRINCIPAL:
+// 1) Lemos o id da rota e procuramos o índice do item na lista.
+//    - SE não existir item com esse id ENTÃO devolvemos 404.
+// 2) Fazemos trim às principais strings vindas do body.
+// 3) SE após o trim algum campo obrigatório ficar vazio ENTÃO devolvemos 400.
+// 4) SE estiver tudo válido ENTÃO mantemos o id original, substituímos o objeto no array
+//    e guardamos os dados em disco; no final, devolvemos o item atualizado.
 app.put('/api/itens/:id', (req, res) => {
     try {
         const id = parseInt(req.params.id);
@@ -229,7 +289,14 @@ app.put('/api/itens/:id', (req, res) => {
     }
 });
 
-// Atualizar coleção
+// Atualizar coleção (PUT)
+// FLUXO PRINCIPAL:
+// 1) Lemos o id da rota e procuramos o índice da coleção.
+//    - SE não encontrar ENTÃO devolvemos 404.
+// 2) Fazemos trim ao nome e descrição recebidos.
+// 3) SE algum destes campos estiver vazio ENTÃO devolvemos 400.
+// 4) Caso contrário, mantemos o id, atualizamos o array, gravamos no ficheiro
+//    e devolvemos a coleção atualizada.
 app.put('/api/colecoes/:id', (req, res) => {
     try {
         const id = parseInt(req.params.id);
@@ -268,9 +335,15 @@ app.put('/api/colecoes/:id', (req, res) => {
     }
 });
 
-// ========== ENDPOINTS PARA APAGAR ==========
+// ===================================
+// ENDPOINTS PARA APAGAR (DELETE)
+// ===================================
 
-// Apagar item
+// Apagar item (DELETE)
+// FLUXO:
+// - Lemos o id, procuramos o índice no array.
+//   * SE não encontrar ENTÃO devolvemos 404.
+//   * SE encontrar ENTÃO removemos com splice, guardamos e devolvemos mensagem de sucesso.
 app.delete('/api/itens/:id', (req, res) => {
     try {
         const id = parseInt(req.params.id);
@@ -289,7 +362,13 @@ app.delete('/api/itens/:id', (req, res) => {
     }
 });
 
-// Apagar coleção
+// Apagar coleção (DELETE)
+// FLUXO:
+// - Lemos o id e procuramos a coleção.
+//   * SE não existir ENTÃO devolvemos 404.
+// - Descobrimos o nome da coleção e verificamos se há itens associados.
+//   * SE existirem itens com essa coleção ENTÃO NÃO apagamos e devolvemos 400 a avisar.
+//   * SE não existirem itens associados ENTÃO removemos a coleção, guardamos e respondemos sucesso.
 app.delete('/api/colecoes/:id', (req, res) => {
     try {
         const id = parseInt(req.params.id);
@@ -318,7 +397,9 @@ app.delete('/api/colecoes/:id', (req, res) => {
     }
 });
 
-// Endpoint para integrar API pública (Metropolitan Museum of Art API)
+// ============================================================
+// INTEGRACAO COM API PUBLICA (Metropolitan Museum of Art)
+// ============================================================
 app.get('/api/arte-publica', (req, res) => {
     try {
         // Base URL da API do Metropolitan Museum of Art
@@ -327,6 +408,7 @@ app.get('/api/arte-publica', (req, res) => {
         // Primeiro, fazer uma busca para obter objectIDs
         const searchUrl = `${baseUrl}/search?q=*&hasImages=true`;
         
+        // Primeiro passo: pesquisar objectIDs que tenham imagens.
         https.get(searchUrl, (searchResponse) => {
             let searchData = '';
             
@@ -338,14 +420,19 @@ app.get('/api/arte-publica', (req, res) => {
                 try {
                     const searchResult = JSON.parse(searchData);
                     
-                    // Pegar os primeiros 5 objectIDs
+                    // Pegar alguns objectIDs (primeiros 10) para não sobrecarregar.
                     const objectIDs = searchResult.objectIDs ? searchResult.objectIDs.slice(0, 10) : [];
                     
                     if (objectIDs.length === 0) {
                         return res.json([]);
                     }
                     
-                    // Buscar detalhes de cada objeto
+                    // Buscar detalhes de cada objeto.
+                    // Para cada ID:
+                    // - SE conseguirmos obter e processar o JSON ENTÃO transformamos
+                    //   num objeto mais simples (id, titulo, artista, data, imagem).
+                    // - SE der algum erro específico nesse ID ENTÃO apenas fazemos
+                    //   resolve(null) para o ignorar mais tarde.
                     const promises = objectIDs.map(objectID => {
                         return new Promise((resolve, reject) => {
                             const objectUrl = `${baseUrl}/objects/${objectID}`;
@@ -411,7 +498,7 @@ app.get('/api/arte-publica', (req, res) => {
     }
 });
 
-// Helper to GET JSON via HTTPS
+// Pequeno helper para fazer GET de um URL HTTPS e devolver JSON
 function httpsGetJson(url) {
     return new Promise((resolve, reject) => {
         https.get(url, (resp) => {
