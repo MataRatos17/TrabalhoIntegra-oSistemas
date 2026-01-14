@@ -111,6 +111,90 @@
         </section>
     </main>
 
+    <!-- Modal de Edição de Item -->
+    <div id="modal-editar-item" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModalEditarItem()">&times;</span>
+            <h3>Editar Item</h3>
+            <form id="form-editar-item">
+                <input type="hidden" id="editar-item-id">
+                
+                <div class="form-group">
+                    <label for="editar-titulo">Título:</label>
+                    <input type="text" id="editar-titulo" name="titulo" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editar-descricao">Descrição:</label>
+                    <textarea id="editar-descricao" name="descricao" rows="4" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="editar-categoria">Categoria:</label>
+                    <select id="editar-categoria" name="categoria" required>
+                        <option value="">Selecione...</option>
+                        <option value="Projetos">Projetos</option>
+                        <option value="Fotografias">Fotografias</option>
+                        <option value="Peças Históricas">Peças Históricas</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editar-ano">Ano:</label>
+                    <input type="number" id="editar-ano" name="ano" min="1900" max="2100" value="2024">
+                </div>
+
+                <div class="form-group">
+                    <label for="editar-foto">URL da Foto:</label>
+                    <input type="url" id="editar-foto" name="foto" placeholder="https://...">
+                </div>
+
+                <div class="form-group">
+                    <label for="editar-colecao">Coleção:</label>
+                    <select id="editar-colecao" name="colecao" required>
+                        <option value="">Selecione...</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Guardar Alterações</button>
+                    <button type="button" class="btn-secondary" onclick="fecharModalEditarItem()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Edição de Coleção -->
+    <div id="modal-editar-colecao" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModalEditarColecao()">&times;</span>
+            <h3>Editar Coleção</h3>
+            <form id="form-editar-colecao">
+                <input type="hidden" id="editar-colecao-id">
+                
+                <div class="form-group">
+                    <label for="editar-nome-colecao">Nome da Coleção:</label>
+                    <input type="text" id="editar-nome-colecao" name="nome" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editar-descricao-colecao">Descrição:</label>
+                    <textarea id="editar-descricao-colecao" name="descricao" rows="3" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="editar-cor-colecao">Cor (hex):</label>
+                    <input type="color" id="editar-cor-colecao" name="cor" value="#6C757D">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Guardar Alterações</button>
+                    <button type="button" class="btn-secondary" onclick="fecharModalEditarColecao()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <footer>
         <p>&copy; 2024 Museu Virtual da Escola</p>
     </footer>

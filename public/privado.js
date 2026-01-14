@@ -52,6 +52,8 @@ async function carregarItens() {
 function configurarFormularios() {
     const formItem = document.getElementById('form-adicionar-item');
     const formColecao = document.getElementById('form-criar-colecao');
+    const formEditarItem = document.getElementById('form-editar-item');
+    const formEditarColecao = document.getElementById('form-editar-colecao');
     
     formItem.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -61,6 +63,16 @@ function configurarFormularios() {
     formColecao.addEventListener('submit', async (e) => {
         e.preventDefault();
         await criarColecao();
+    });
+
+    formEditarItem.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await guardarEdicaoItem();
+    });
+
+    formEditarColecao.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await guardarEdicaoColecao();
     });
 }
 
@@ -251,12 +263,16 @@ function criarCardColecao(colecao) {
     
     // Escapar aspas no nome para evitar problemas no onclick
     const nomeEscapado = colecao.nome.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    const colecaoJson = JSON.stringify(colecao).replace(/'/g, "\\'").replace(/"/g, '&quot;');
     
     card.innerHTML = `
         <div class="conteudo">
             <h3>${colecao.nome}</h3>
             <p class="descricao">${colecao.descricao}</p>
             <div class="acoes">
+                <button class="btn-editar" onclick="abrirModalEditarColecao(${colecaoJson})" title="Editar coleção">
+                     Editar
+                </button>
                 <button class="btn-apagar" onclick="apagarColecao(${colecao.id}, '${nomeEscapado}')" title="Apagar coleção">
                      Apagar
                 </button>
@@ -279,6 +295,8 @@ function criarCardItem(item) {
         ? `<img src="${urlImagem}" alt="${item.titulo}" loading="lazy" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'300\'%3E%3Crect fill=\'%23ddd\' width=\'400\' height=\'300\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23999\' font-family=\'Arial\' font-size=\'16\'%3ESem Imagem%3C/text%3E%3C/svg%3E'; this.parentElement.classList.add('sem-imagem');">`
         : `<div class="sem-imagem-placeholder"><span></span><p>Sem imagem</p></div>`;
     
+    const itemJson = JSON.stringify(item).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    
     card.innerHTML = `
         ${imagemHtml}
         <div class="conteudo">
@@ -287,6 +305,9 @@ function criarCardItem(item) {
             <p class="descricao">${item.descricao}</p>
             <p class="ano">ID: ${item.id} | Ano: ${item.ano} | Coleção: ${item.colecao}</p>
             <div class="acoes">
+                <button class="btn-editar" onclick="abrirModalEditarItem(${itemJson})" title="Editar item">
+                    Editar
+                </button>
                 <button class="btn-apagar" onclick="apagarItem(${item.id}, '${item.titulo.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" title="Apagar item">
                     Apagar
                 </button>
@@ -347,6 +368,157 @@ window.apagarColecao = async function(id, nome) {
     } catch (erro) {
         console.error('Erro ao apagar coleção:', erro);
         mostrarMensagem('Erro ao apagar coleção', 'erro');
+    }
+}
+
+/**
+ * Abre o modal para editar um item
+ */
+window.abrirModalEditarItem = async function(item) {
+    // Carregar as coleções para o select
+    try {
+        const resposta = await fetch(`${API_URL}/colecoes`);
+        const colecoes = await resposta.json();
+        
+        const selectColecao = document.getElementById('editar-colecao');
+        selectColecao.innerHTML = '<option value="">Selecione...</option>';
+        
+        colecoes.forEach(colecao => {
+            const option = document.createElement('option');
+            option.value = colecao.nome;
+            option.textContent = colecao.nome;
+            selectColecao.appendChild(option);
+        });
+    } catch (erro) {
+        console.error('Erro ao carregar coleções:', erro);
+    }
+    
+    document.getElementById('editar-item-id').value = item.id;
+    document.getElementById('editar-titulo').value = item.titulo;
+    document.getElementById('editar-descricao').value = item.descricao;
+    document.getElementById('editar-categoria').value = item.categoria;
+    document.getElementById('editar-ano').value = item.ano;
+    document.getElementById('editar-foto').value = item.foto || '';
+    document.getElementById('editar-colecao').value = item.colecao;
+    
+    document.getElementById('modal-editar-item').style.display = 'block';
+}
+
+/**
+ * Fecha o modal de edição de item
+ */
+window.fecharModalEditarItem = function() {
+    document.getElementById('modal-editar-item').style.display = 'none';
+    document.getElementById('form-editar-item').reset();
+}
+
+/**
+ * Guarda as alterações do item
+ */
+async function guardarEdicaoItem() {
+    try {
+        const id = parseInt(document.getElementById('editar-item-id').value);
+        const urlFoto = document.getElementById('editar-foto').value.trim();
+        const urlValidada = validarUrlImagem(urlFoto);
+        
+        if (urlFoto && !urlValidada) {
+            mostrarMensagem('URL de imagem inválida. Use URLs diretas de imagens (não páginas do Pinterest).', 'erro');
+            return;
+        }
+        
+        const itemAtualizado = {
+            titulo: document.getElementById('editar-titulo').value,
+            descricao: document.getElementById('editar-descricao').value,
+            categoria: document.getElementById('editar-categoria').value,
+            ano: parseInt(document.getElementById('editar-ano').value),
+            foto: urlValidada || '',
+            colecao: document.getElementById('editar-colecao').value,
+            id: id
+        };
+        
+        console.log('Enviando para servidor:', itemAtualizado);
+        
+        const resposta = await fetch(`${API_URL}/itens/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(itemAtualizado)
+        });
+        
+        const dados = await resposta.json();
+        console.log('Resposta do servidor:', dados);
+        
+        if (resposta.ok) {
+            mostrarMensagem('Item atualizado com sucesso!', 'sucesso');
+            fecharModalEditarItem();
+            carregarItens();
+        } else {
+            mostrarMensagem(dados.erro || 'Erro ao atualizar item', 'erro');
+        }
+    } catch (erro) {
+        console.error('Erro ao atualizar item:', erro);
+        mostrarMensagem('Erro ao atualizar item: ' + erro.message, 'erro');
+    }
+}
+
+/**
+ * Abre o modal para editar uma coleção
+ */
+window.abrirModalEditarColecao = function(colecao) {
+    document.getElementById('editar-colecao-id').value = colecao.id;
+    document.getElementById('editar-nome-colecao').value = colecao.nome;
+    document.getElementById('editar-descricao-colecao').value = colecao.descricao;
+    document.getElementById('editar-cor-colecao').value = colecao.cor || '#6C757D';
+    
+    document.getElementById('modal-editar-colecao').style.display = 'block';
+}
+
+/**
+ * Fecha o modal de edição de coleção
+ */
+window.fecharModalEditarColecao = function() {
+    document.getElementById('modal-editar-colecao').style.display = 'none';
+    document.getElementById('form-editar-colecao').reset();
+}
+
+/**
+ * Guarda as alterações da coleção
+ */
+async function guardarEdicaoColecao() {
+    try {
+        const id = parseInt(document.getElementById('editar-colecao-id').value);
+        const colecaoAtualizada = {
+            nome: document.getElementById('editar-nome-colecao').value,
+            descricao: document.getElementById('editar-descricao-colecao').value,
+            cor: document.getElementById('editar-cor-colecao').value,
+            id: id
+        };
+        
+        console.log('Enviando para servidor:', colecaoAtualizada);
+        
+        const resposta = await fetch(`${API_URL}/colecoes/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(colecaoAtualizada)
+        });
+        
+        const dados = await resposta.json();
+        console.log('Resposta do servidor:', dados);
+        
+        if (resposta.ok) {
+            mostrarMensagem('Coleção atualizada com sucesso!', 'sucesso');
+            fecharModalEditarColecao();
+            carregarListaColecoes();
+            carregarColecoes();
+        } else {
+            mostrarMensagem(dados.erro || 'Erro ao atualizar coleção', 'erro');
+        }
+    } catch (erro) {
+        console.error('Erro ao atualizar coleção:', erro);
+        mostrarMensagem('Erro ao atualizar coleção: ' + erro.message, 'erro');
     }
 }
 
