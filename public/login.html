@@ -1,15 +1,23 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Museu Virtual da Escola - Login</title>
-    <link rel="stylesheet" href="styles.css">
-    <!-- Biblioteca de Identity Services do Google -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+        <!-- Configuração básica da página HTML -->
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Museu Virtual da Escola - Login</title>
+
+        <!-- Estilos globais da aplicação -->
+        <link rel="stylesheet" href="styles.css">
+
+        <!-- Biblioteca oficial do Google Identity Services
+            Responsável por desenhar o botão "Sign in with Google"
+            e chamar a função JavaScript handleCredentialResponse
+            definida em login.js quando o utilizador faz login -->
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <header>
+        <!-- Cabeçalho com o título do museu e navegação -->
         <h1>Museu Virtual da Escola</h1>
         <nav>
             <a href="index.html">Exposição</a>
@@ -18,11 +26,13 @@
     </header>
 
     <main>
+        <!-- Secção de apresentação da página de login -->
         <section class="login-hero">
             <h2>Entrar na Área Privada</h2>
             <p>Use a sua conta Google para aceder à área de administração.</p>
         </section>
 
+        <!-- Secção que contém o cartão de login com o botão do Google -->
         <section class="login-container">
             <div class="login-card">
                 <h3>Iniciar sessão com Google</h3>
@@ -30,7 +40,19 @@
                     Após o login, será redirecionado para a página de administração.
                 </p>
 
-                <!-- Configuração do botão Google (CLIENT_ID real) -->
+                                <!--
+                                        DIV de configuração do Google Identity Services
+
+                                        - id="g_id_onload": indica ao script do Google que deve
+                                            inicializar automaticamente quando a página carrega.
+                                        - data-client_id: CLIENT_ID OAuth 2.0 criado na consola
+                                            do Google Cloud (tipo Aplicativo Web).
+                                        - data-context="signin": contexto de login.
+                                        - data-ux_mode="popup": o login aparece num pop-up.
+                                        - data-callback: nome da função JS (em login.js)
+                                            que vai receber o token do Google após o login.
+                                        - data-auto_prompt="false": não mostrar popup automático.
+                                -->
                 <div id="g_id_onload"
 					data-client_id="351738639539-ikovqdno3970fa51vimumfo2ak81tkdr.apps.googleusercontent.com"
                     data-context="signin"
@@ -39,7 +61,9 @@
                     data-auto_prompt="false">
                 </div>
 
-                <div class="g_id_signin"
+                 <!-- Este elemento é o próprio botão "Sign in with Google"
+                     O script do Google substitui esta DIV por um botão pronto -->
+                 <div class="g_id_signin"
                     data-type="standard"
                     data-shape="rectangular"
                     data-theme="outline"
@@ -60,6 +84,7 @@
         <p>&copy; 2024 Museu Virtual da Escola</p>
     </footer>
 
+    <!-- Script com a lógica de login (guardar token, redirecionar, etc.) -->
     <script src="login.js"></script>
 </body>
 </html>

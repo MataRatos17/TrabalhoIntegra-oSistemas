@@ -116,10 +116,16 @@ app.get('/api/colecoes/:nome/itens', (req, res) => {
 app.post('/api/itens', (req, res) => {
     try {
         const novoItem = req.body;
+
+        // Normalizar (trim) strings
+        novoItem.titulo = (novoItem.titulo || '').trim();
+        novoItem.descricao = (novoItem.descricao || '').trim();
+        novoItem.categoria = (novoItem.categoria || '').trim();
+        novoItem.colecao = (novoItem.colecao || '').trim();
         
-        // Validar dados obrigatórios
-        if (!novoItem.titulo || !novoItem.descricao || !novoItem.categoria) {
-            return res.status(400).json({ erro: 'Dados incompletos' });
+        // Validar dados obrigatórios (não permitir strings vazias)
+        if (!novoItem.titulo || !novoItem.descricao || !novoItem.categoria || !novoItem.colecao) {
+            return res.status(400).json({ erro: 'Dados incompletos. Preencha título, descrição, categoria e coleção.' });
         }
         
         // Gerar novo ID
@@ -147,10 +153,14 @@ app.post('/api/itens', (req, res) => {
 app.post('/api/colecoes', (req, res) => {
     try {
         const novaColecao = req.body;
+
+        // Normalizar (trim) strings
+        novaColecao.nome = (novaColecao.nome || '').trim();
+        novaColecao.descricao = (novaColecao.descricao || '').trim();
         
-        // Validar dados obrigatórios
+        // Validar dados obrigatórios (não permitir strings vazias)
         if (!novaColecao.nome || !novaColecao.descricao) {
-            return res.status(400).json({ erro: 'Dados incompletos' });
+            return res.status(400).json({ erro: 'Dados incompletos. Preencha nome e descrição da coleção.' });
         }
         
         // Verificar se já existe
@@ -192,10 +202,16 @@ app.put('/api/itens/:id', (req, res) => {
         }
         
         const itemAtualizado = req.body;
+
+        // Normalizar (trim) strings
+        itemAtualizado.titulo = (itemAtualizado.titulo || '').trim();
+        itemAtualizado.descricao = (itemAtualizado.descricao || '').trim();
+        itemAtualizado.categoria = (itemAtualizado.categoria || '').trim();
+        itemAtualizado.colecao = (itemAtualizado.colecao || '').trim();
         
         // Validar dados obrigatórios
-        if (!itemAtualizado.titulo || !itemAtualizado.descricao || !itemAtualizado.categoria) {
-            return res.status(400).json({ erro: 'Dados incompletos' });
+        if (!itemAtualizado.titulo || !itemAtualizado.descricao || !itemAtualizado.categoria || !itemAtualizado.colecao) {
+            return res.status(400).json({ erro: 'Dados incompletos. Preencha título, descrição, categoria e coleção.' });
         }
         
         // Manter o ID original
@@ -227,10 +243,14 @@ app.put('/api/colecoes/:id', (req, res) => {
         }
         
         const colecaoAtualizada = req.body;
+
+        // Normalizar (trim) strings
+        colecaoAtualizada.nome = (colecaoAtualizada.nome || '').trim();
+        colecaoAtualizada.descricao = (colecaoAtualizada.descricao || '').trim();
         
         // Validar dados obrigatórios
         if (!colecaoAtualizada.nome || !colecaoAtualizada.descricao) {
-            return res.status(400).json({ erro: 'Dados incompletos' });
+            return res.status(400).json({ erro: 'Dados incompletos. Preencha nome e descrição da coleção.' });
         }
         
         // Manter o ID original

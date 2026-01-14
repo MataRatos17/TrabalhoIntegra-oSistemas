@@ -1,25 +1,36 @@
+// =============================
+// CONFIGURACAO DA AREA PRIVADA
+// =============================
+
+// URL base da API Node (back-end) onde estão os endpoints /api/...
 const API_URL = 'http://localhost:3000/api';
 
+// Mesmas chaves usadas em login.js para guardar o login Google
 const STORAGE_TOKEN_KEY = 'google_token';
 const STORAGE_USER_KEY = 'google_user';
 
 // Verificar se o utilizador está autenticado antes de carregar a página
+// Se não existir token no localStorage, redireciona para a página de login
 if (!localStorage.getItem(STORAGE_TOKEN_KEY)) {
     window.location.href = 'login.html';
 }
 
-// Carregar dados ao iniciar a página
+// Ao carregar o DOM, inicializamos a área de administração
+// (carrega coleções, itens, configura formulários e botão de logout)
 document.addEventListener('DOMContentLoaded', () => {
     carregarColecoes();
     carregarItens();
     carregarListaColecoes();
     configurarFormularios();
 
+    // Configura o botão "Terminar sessão" no cabeçalho
     const btnLogout = document.getElementById('btn-logout');
     if (btnLogout) {
         btnLogout.addEventListener('click', () => {
+            // Remove token e dados do utilizador do armazenamento local
             localStorage.removeItem(STORAGE_TOKEN_KEY);
             localStorage.removeItem(STORAGE_USER_KEY);
+            // Volta para a página de login
             window.location.href = 'login.html';
         });
     }
@@ -98,7 +109,31 @@ function configurarFormularios() {
  */
 async function adicionarItem() {
     try {
+        // Ler e limpar (trim) os valores dos campos do formulário
+        const titulo = document.getElementById('titulo').value.trim();
+        const descricao = document.getElementById('descricao').value.trim();
+        const categoria = document.getElementById('categoria').value.trim();
+        const anoValor = document.getElementById('ano').value.trim();
+        const colecao = document.getElementById('colecao').value.trim();
         const urlFoto = document.getElementById('foto').value.trim();
+
+        // VALIDAÇÕES NO FRONT-END
+        if (!titulo || !descricao || !categoria || !colecao) {
+            mostrarMensagem('Preencha todos os campos obrigatórios (Título, Descrição, Categoria e Coleção).', 'erro');
+            return;
+        }
+
+        if (!anoValor || isNaN(parseInt(anoValor))) {
+            mostrarMensagem('Informe um ano válido.', 'erro');
+            return;
+        }
+
+        const ano = parseInt(anoValor);
+        if (ano < 1900 || ano > 2100) {
+            mostrarMensagem('O ano deve estar entre 1900 e 2100.', 'erro');
+            return;
+        }
+
         const urlValidada = validarUrlImagem(urlFoto);
         
         if (urlFoto && !urlValidada) {
@@ -107,12 +142,12 @@ async function adicionarItem() {
         }
         
         const formData = {
-            titulo: document.getElementById('titulo').value,
-            descricao: document.getElementById('descricao').value,
-            categoria: document.getElementById('categoria').value,
-            ano: parseInt(document.getElementById('ano').value),
+            titulo,
+            descricao,
+            categoria,
+            ano,
             foto: urlValidada || undefined,
-            colecao: document.getElementById('colecao').value
+            colecao
         };
         
         const resposta = await fetch(`${API_URL}/itens`, {
@@ -144,10 +179,20 @@ async function adicionarItem() {
  */
 async function criarColecao() {
     try {
+        const nome = document.getElementById('nome-colecao').value.trim();
+        const descricao = document.getElementById('descricao-colecao').value.trim();
+        const cor = document.getElementById('cor-colecao').value;
+
+        // Validar campos obrigatórios da coleção
+        if (!nome || !descricao) {
+            mostrarMensagem('Preencha o nome e a descrição da coleção.', 'erro');
+            return;
+        }
+
         const formData = {
-            nome: document.getElementById('nome-colecao').value,
-            descricao: document.getElementById('descricao-colecao').value,
-            cor: document.getElementById('cor-colecao').value
+            nome,
+            descricao,
+            cor
         };
         
         const resposta = await fetch(`${API_URL}/colecoes`, {

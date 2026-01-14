@@ -1,13 +1,26 @@
-// Chave no localStorage para guardar o token Google
+// ============================
+// CONFIGURACAO DO LOGIN GOOGLE
+// ============================
+
+// Chaves usadas no localStorage para guardar dados do login Google
+// - google_token: token JWT devolvido pelo Google
+// - google_user:  alguns dados do utilizador (nome, email, foto)
 const STORAGE_TOKEN_KEY = 'google_token';
 const STORAGE_USER_KEY = 'google_user';
 
-// Se já estiver autenticado, ir direto para a página privada
+// Quando o ficheiro é carregado, verificamos se já existe token
+// Se existir, consideramos que o utilizador já fez login antes
+// e redirecionamos logo para a página admin (evita login repetido)
 if (localStorage.getItem(STORAGE_TOKEN_KEY)) {
     window.location.href = 'admin.html';
 }
 
-// Função chamada pelo Google Identity Services quando o utilizador faz login
+// ===============================================
+// FUNCAO DE CALLBACK CHAMADA PELO GOOGLE AO LOGIN
+// ===============================================
+// Esta função é referenciada em login.html em data-callback="handleCredentialResponse"
+// O Google chama esta função passando um objeto "response" que contém:
+// - response.credential: token JWT com informações do utilizador
 window.handleCredentialResponse = function (response) {
     try {
         const credential = response.credential;
@@ -16,9 +29,10 @@ window.handleCredentialResponse = function (response) {
             return;
         }
 
+        // Decodifica o conteúdo do token (nome, email, foto, etc.)
         const payload = decodeJwtPayload(credential);
 
-        // Guardar token e dados básicos do utilizador
+        // Guarda o token bruto e, se possível, os dados básicos do utilizador
         localStorage.setItem(STORAGE_TOKEN_KEY, credential);
         if (payload) {
             localStorage.setItem(STORAGE_USER_KEY, JSON.stringify({
@@ -28,7 +42,7 @@ window.handleCredentialResponse = function (response) {
             }));
         }
 
-        // Redirecionar para a área privada
+        // Depois de guardar os dados, envia o utilizador para a área privada
         window.location.href = 'admin.html';
     } catch (e) {
         console.error('Erro ao processar login Google:', e);
@@ -36,7 +50,12 @@ window.handleCredentialResponse = function (response) {
     }
 };
 
-// Decodifica o payload (2ª parte) do JWT devolvido pelo Google
+// ========================================================
+// Função auxiliar para decodificar o JWT devolvido pelo Google
+// ========================================================
+// O token JWT tem 3 partes separadas por ponto: header.payload.signature
+// Aqui pegamos apenas a 2ª parte (payload), transformamos de Base64URL
+// para texto normal e depois fazemos JSON.parse para obter um objeto JS.
 function decodeJwtPayload(token) {
     try {
         const partes = token.split('.');
