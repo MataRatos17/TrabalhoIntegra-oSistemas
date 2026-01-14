@@ -439,12 +439,20 @@ app.get('/api/arte-publica/artistas', async (req, res) => {
 app.get('/api/arte-publica/por-artista', async (req, res) => {
     try {
         const artistQuery = req.query.artist;
-        if (!artistQuery) return res.status(400).json({ erro: 'Parâmetro `artist` é obrigatório' });
+        if (!artistQuery) return res.json([]);
         const baseUrl = 'https://collectionapi.metmuseum.org/public/collection/v1';
 
         // Usar o endpoint de search filtrando por artista/cultura para obter objectIDs relevantes
         const searchUrl = `${baseUrl}/search?artistOrCulture=true&hasImages=true&q=${encodeURIComponent(artistQuery)}`;
-        const searchResult = await httpsGetJson(searchUrl);
+        
+        let searchResult;
+        try {
+            searchResult = await httpsGetJson(searchUrl);
+        } catch (err) {
+            console.error('Erro ao buscar no Met Museum:', err.message);
+            return res.json([]);
+        }
+        
         const objectIDs = searchResult.objectIDs ? searchResult.objectIDs.slice(0, 100) : [];
 
         const obras = [];
@@ -469,7 +477,7 @@ app.get('/api/arte-publica/por-artista', async (req, res) => {
         res.json(obras);
     } catch (error) {
         console.error('Erro ao buscar obras por artista:', error);
-        res.status(500).json({ erro: 'Erro ao buscar obras por artista' });
+        res.json([]);
     }
 });
 

@@ -48,15 +48,29 @@ async function carregarArtistas() {
  * Carrega até 6 obras de um artista selecionado
  */
 async function carregarObrasPorArtista(artista) {
+    const container = document.getElementById('obras-arte-container');
+    
     try {
+        console.log('Carregando obras para artista:', artista);
         const resposta = await fetch(`${API_URL}/arte-publica/por-artista?artist=${encodeURIComponent(artista)}`);
+        
+        if (!resposta.ok) {
+            console.error('Erro HTTP:', resposta.status);
+            container.innerHTML = '<p>Nenhuma obra encontrada para este artista.</p>';
+            return;
+        }
+        
         const obras = await resposta.json();
+        
+        if (!obras || obras.length === 0) {
+            container.innerHTML = '<p>Nenhuma obra encontrada para este artista.</p>';
+            return;
+        }
 
         exibirObrasArte(obras);
     } catch (erro) {
         console.error('Erro ao carregar obras por artista:', erro);
-        const container = document.getElementById('obras-arte-container');
-        container.innerHTML = '<p>Erro ao carregar obras deste artista.</p>';
+        container.innerHTML = '<p>Nenhuma obra disponível para este artista.</p>';
     }
 }
 

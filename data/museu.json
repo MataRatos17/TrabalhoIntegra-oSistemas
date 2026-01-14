@@ -19,39 +19,48 @@
       "colecao": "História"
     },
     {
-      "id": 3,
       "titulo": "Maquete do Sistema Solar",
-      "descricao": "Maquete detalhada do sistema solar criada pelos alunos do 6º ano para a feira de ciências.",
+      "descricao": "Maquete detalhada do e ciências.",
       "categoria": "Projetos",
       "ano": 2024,
       "foto": "https://via.placeholder.com/400x300?text=Sistema+Solar",
-      "colecao": "Ciências"
+      "colecao": "Ciências",
+      "id": 3
     },
     {
-      "id": 4,
-      "titulo": "Troféu de Atletismo",
+      "titulo": "Troféu de ",
       "descricao": "Troféu conquistado pela equipa de atletismo nos campeonatos regionais de 2022.",
       "categoria": "Peças Históricas",
       "ano": 2022,
       "foto": "https://via.placeholder.com/400x300?text=Troféu+Atletismo",
-      "colecao": "Desporto"
+      "colecao": "Desporto",
+      "id": 4
     },
     {
+      "id": 8,
       "titulo": "Testes",
       "descricao": "Mano triste",
       "categoria": "Peças Históricas",
       "ano": 2021,
       "foto": "https://images.unsplash.com/photo-1678483790053-71367bc7a02c?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1yZWxhdGVkfDE1fHx8ZW58MHx8fHx8",
-      "colecao": "Ciências",
-      "id": 8
+      "colecao": "Ciências"
+    },
+    {
+      "titulo": "ADSFGADFG",
+      "descricao": "GFFFFFGG",
+      "categoria": "Fotografias",
+      "ano": 2020,
+      "colecao": "rer",
+      "id": 9,
+      "foto": ""
     }
   ],
   "colecoes": [
     {
-      "id": 1,
       "nome": "Tecnologia",
-      "descricao": "Projetos relacionados com tecnologia e inovação",
-      "cor": "#4A90E2"
+      "descricao": "Projetos relacionados com tecnologia inovação",
+      "cor": "#4a90e2",
+      "id": 1
     },
     {
       "id": 2,
@@ -78,7 +87,7 @@
       "cor": "#9B59B6"
     },
     {
-      "nome": "Terror",
+      "nome": "rer",
       "descricao": "Teste",
       "cor": "#0a0a0a",
       "id": 6
