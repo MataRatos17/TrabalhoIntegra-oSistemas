@@ -400,6 +400,11 @@ app.delete('/api/colecoes/:id', (req, res) => {
 // ============================================================
 // INTEGRACAO COM API PUBLICA (Metropolitan Museum of Art)
 // ============================================================
+// Cache para artistas (para evitar fazer as mesmas requisições)
+let cacheArtistas = null;
+let cacheArtistasTimestamp = 0;
+const CACHE_DURATION = 3600000; // 1 hora em ms
+
 app.get('/api/arte-publica', (req, res) => {
     try {
         // Base URL da API do Metropolitan Museum of Art
@@ -515,75 +520,136 @@ function httpsGetJson(url) {
     });
 }
 
-// Retorna lista de artistas únicos (a partir dos objectIDs pesquisados)
+// Retorna lista de artistas únicos (usando search com artistOrCulture)
 app.get('/api/arte-publica/artistas', async (req, res) => {
     try {
+        // Verificar se temos cache válido
+        const agora = Date.now();
+        if (cacheArtistas && (agora - cacheArtistasTimestamp) < CACHE_DURATION) {
+            console.log('Retornando artistas do cache');
+            return res.json(cacheArtistas);
+        }
+
+        console.log('Buscando artistas da API do Met Museum...');
         const baseUrl = 'https://collectionapi.metmuseum.org/public/collection/v1';
-        const searchUrl = `${baseUrl}/search?q=*&hasImages=true`;
+        
+        // Buscar com artistOrCulture=true (do docs oficial da API)
+        const searchUrl = `${baseUrl}/search?hasImages=true&artistOrCulture=true&q=artist`;
+        const searchResult = await Promise.race([
+            httpsGetJson(searchUrl),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+        ]);
+        
+        const objectIDs = searchResult.objectIDs ? searchResult.objectIDs.slice(0, 40) : [];
+        console.log(`Encontrados ${objectIDs.length} objetos com artistOrCulture`);
 
-        const searchResult = await httpsGetJson(searchUrl);
-        const objectIDs = searchResult.objectIDs ? searchResult.objectIDs.slice(0, 500) : [];
-
-        const promises = objectIDs.map(id => httpsGetJson(`${baseUrl}/objects/${id}`).catch(() => null));
+        // Buscar detalhes dos objetos
+        const promises = objectIDs.map(id => 
+            httpsGetJson(`${baseUrl}/objects/${id}`)
+                .catch(err => null)
+        );
+        
         const objetos = await Promise.all(promises);
 
-        const artistasSet = new Set();
+        const artistasMap = new Map();
         objetos.forEach(obj => {
             if (!obj) return;
             const nome = (obj.artistDisplayName || obj.artistAlphaSort || '').trim();
-            if (nome) artistasSet.add(nome);
+            if (nome && !artistasMap.has(nome)) {
+                artistasMap.set(nome, {
+                    id: Buffer.from(nome).toString('base64'),
+                    nome: nome
+                });
+            }
         });
 
-        const artistas = Array.from(artistasSet).sort((a, b) => a.localeCompare(b));
+        const artistas = Array.from(artistasMap.values())
+            .sort((a, b) => a.nome.localeCompare(b.nome))
+            .slice(0, 50);
+        
+        // Guardar em cache
+        cacheArtistas = artistas;
+        cacheArtistasTimestamp = agora;
+        
+        console.log(`Retornando ${artistas.length} artistas`);
         res.json(artistas);
     } catch (error) {
-        console.error('Erro ao carregar artistas da API pública:', error);
+        console.error('Erro ao carregar artistas da API pública:', error.message);
+        // Se falhar, tentar retornar o cache antigo
+        if (cacheArtistas) {
+            console.log('Retornando cache antigo de artistas');
+            return res.json(cacheArtistas);
+        }
         res.status(500).json({ erro: 'Erro ao carregar artistas da API pública' });
     }
 });
 
-// Retorna até 6 obras de um artista especificado via query string ?artist=Nome+do+Artista
-app.get('/api/arte-publica/por-artista', async (req, res) => {
+// Retorna até 10 obras de um artista usando seu ID
+app.get('/api/arte-publica/artista/:artistId', async (req, res) => {
     try {
-        const artistQuery = req.query.artist;
-        if (!artistQuery) return res.json([]);
+        const artistId = req.params.artistId;
+        
+        // Decodificar o ID para obter o nome do artista
+        let artistNome;
+        try {
+            artistNome = Buffer.from(artistId, 'base64').toString('utf-8');
+        } catch (err) {
+            return res.status(400).json({ erro: 'ID de artista inválido' });
+        }
+
+        if (!artistNome) return res.json([]);
+        
         const baseUrl = 'https://collectionapi.metmuseum.org/public/collection/v1';
 
-        // Usar o endpoint de search filtrando por artista/cultura para obter objectIDs relevantes
-        const searchUrl = `${baseUrl}/search?artistOrCulture=true&hasImages=true&q=${encodeURIComponent(artistQuery)}`;
+        // Usar o endpoint de search com artistOrCulture=true conforme docs oficiais
+        const searchUrl = `${baseUrl}/search?artistOrCulture=true&hasImages=true&q=${encodeURIComponent(artistNome)}`;
         
         let searchResult;
         try {
-            searchResult = await httpsGetJson(searchUrl);
+            searchResult = await Promise.race([
+                httpsGetJson(searchUrl),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+            ]);
         } catch (err) {
             console.error('Erro ao buscar no Met Museum:', err.message);
             return res.json([]);
         }
         
-        const objectIDs = searchResult.objectIDs ? searchResult.objectIDs.slice(0, 100) : [];
+        const objectIDs = searchResult.objectIDs ? searchResult.objectIDs.slice(0, 50) : [];
+        console.log(`Artista '${artistNome}': ${objectIDs.length} objetos encontrados`);
 
         const obras = [];
         for (const id of objectIDs) {
-            if (obras.length >= 6) break;
+            if (obras.length >= 10) break;
             try {
-                const obj = await httpsGetJson(`${baseUrl}/objects/${id}`);
+                const obj = await Promise.race([
+                    httpsGetJson(`${baseUrl}/objects/${id}`),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+                ]);
                 if (!obj) continue;
                 const imagem = obj.primaryImageSmall || obj.primaryImage || null;
+                if (!imagem) continue;
+                
                 obras.push({
                     id: obj.objectID,
                     titulo: obj.title || 'Sem título',
                     artista: (obj.artistDisplayName || obj.artistAlphaSort || 'Artista desconhecido'),
                     data: obj.objectDate || obj.objectBeginDate || 'Data desconhecida',
-                    imagem: imagem
+                    imagem: imagem,
+                    departamento: obj.department || '',
+                    material: obj.medium || '',
+                    dimensoes: obj.dimensions || ''
                 });
             } catch (err) {
-                // ignorar erro e continuar
+                console.error(`Erro ao buscar objeto ${id}:`, err.message);
+                continue;
             }
         }
 
+        console.log(`Retornando ${obras.length} obras para artista '${artistNome}'`);
         res.json(obras);
     } catch (error) {
-        console.error('Erro ao buscar obras por artista:', error);
+        console.error('Erro ao buscar obras por ID de artista:', error.message);
         res.json([]);
     }
 });

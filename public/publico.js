@@ -11,17 +11,9 @@
 // URL base da API interna do museu
 const API_URL = 'http://localhost:3000/api';
 
-// Quando o DOM estiver pronto, carrega os dados iniciais.
-// FLUXO:
-// - SE a página carregar corretamente ENTÃO buscamos de imediato:
-//   1) Coleções (para os botões de filtro)
-//   2) Itens (para a galeria principal)
-//   3) Obras da API pública
-//   4) Lista de artistas da API pública
 document.addEventListener('DOMContentLoaded', () => {
     carregarColecoes();          // Botões de filtro por coleção
     carregarItens();             // Itens da exposição
-    carregarObrasArtePublica();  // Obras vindas da API pública
     carregarArtistas();          // Lista de artistas para o select
 });
 
@@ -31,61 +23,72 @@ document.addEventListener('DOMContentLoaded', () => {
 // Carrega lista de artistas vindos da API pública e popula a combobox.
 // FLUXO:
 // - Fazemos um pedido à API interna /arte-publica/artistas.
-// - SE o pedido for bem sucedido ENTÃO limpamos o select, criamos a opção "Todos"
-//   e depois adicionamos uma option por cada artista.
+// - SE o pedido for bem sucedido ENTÃO limpamos o select, criamos a opção padrão
+//   e depois adicionamos uma option por cada artista (com seu ID).
 // - Adicionamos um listener ao select:
-//   * SE o utilizador escolher "Todos" ENTÃO voltamos a carregar todas as obras.
-//   * SE escolher um artista específico ENTÃO chamamos carregarObrasPorArtista.
+//   * SE o utilizador escolher um artista ENTÃO chamamos carregarObrasPorArtistaId.
 // - SE acontecer algum erro ENTÃO mostramos uma mensagem de erro no próprio select.
 async function carregarArtistas() {
     const select = document.getElementById('select-artistas');
     try {
+        console.log('Iniciando carregamento de artistas...');
         const resposta = await fetch(`${API_URL}/arte-publica/artistas`);
+        
+        if (!resposta.ok) {
+            throw new Error(`HTTP ${resposta.status}`);
+        }
+        
         const artistas = await resposta.json();
+        console.log('Artistas carregados:', artistas.length);
 
         select.innerHTML = '';
-        const opcTodas = document.createElement('option');
-        opcTodas.value = '';
-        opcTodas.textContent = 'Todos';
-        select.appendChild(opcTodas);
+        const opcVazia = document.createElement('option');
+        opcVazia.value = '';
+        opcVazia.textContent = artistas.length > 0 ? 'Selecione um artista...' : 'Nenhum artista encontrado';
+        select.appendChild(opcVazia);
 
-        artistas.forEach(nome => {
+        if (artistas.length === 0) {
+            console.warn('Nenhum artista retornado da API');
+            return;
+        }
+
+        artistas.forEach(artista => {
             const opt = document.createElement('option');
-            opt.value = nome;
-            opt.textContent = nome;
+            opt.value = artista.id; // Usar o ID do artista
+            opt.textContent = artista.nome;
             select.appendChild(opt);
         });
 
         select.addEventListener('change', () => {
-            const val = select.value;
-            // SE o valor estiver vazio ("Todos") ENTÃO mostramos todas as obras disponíveis.
-            // SE tiver um nome de artista ENTÃO filtramos as obras para esse artista.
-            if (!val) {
-                carregarObrasArtePublica();
+            const artistaId = select.value;
+            if (artistaId) {
+                carregarObrasPorArtistaId(artistaId);
             } else {
-                carregarObrasPorArtista(val);
+                // Limpar obras se nenhum artista for selecionado
+                const container = document.getElementById('obras-arte-container');
+                container.innerHTML = '';
             }
         });
     } catch (erro) {
         console.error('Erro ao carregar artistas:', erro);
-        select.innerHTML = '<option value="">Erro ao carregar artistas</option>';
+        select.innerHTML = '<option value="">Erro: ' + erro.message + '</option>';
     }
 }
 
 /**
- * Carrega até 6 obras de um artista selecionado.
+ * Carrega até 10 obras de um artista usando seu ID.
  * FLUXO:
- * - Fazemos um pedido ao endpoint /arte-publica/por-artista.
+ * - Fazemos um pedido ao endpoint /arte-publica/artista/:artistId.
  * - SE a resposta HTTP não for ok ENTÃO mostramos mensagem de "Nenhuma obra".
  * - SE o array devolvido estiver vazio ENTÃO também avisamos que não há obras.
  * - CASO CONTRÁRIO, chamamos exibirObrasArte para desenhar os cartões.
  */
-async function carregarObrasPorArtista(artista) {
+async function carregarObrasPorArtistaId(artistId) {
     const container = document.getElementById('obras-arte-container');
     
     try {
-        console.log('Carregando obras para artista:', artista);
-        const resposta = await fetch(`${API_URL}/arte-publica/por-artista?artist=${encodeURIComponent(artista)}`);
+        console.log('Carregando obras para artista com ID:', artistId);
+        const resposta = await fetch(`${API_URL}/arte-publica/artista/${artistId}`);
         
         if (!resposta.ok) {
             console.error('Erro HTTP:', resposta.status);
@@ -102,7 +105,7 @@ async function carregarObrasPorArtista(artista) {
 
         exibirObrasArte(obras);
     } catch (erro) {
-        console.error('Erro ao carregar obras por artista:', erro);
+        console.error('Erro ao carregar obras por ID de artista:', erro);
         container.innerHTML = '<p>Nenhuma obra disponível para este artista.</p>';
     }
 }

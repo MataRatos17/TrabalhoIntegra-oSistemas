@@ -349,6 +349,40 @@ main {
     margin-bottom: 1.5rem;
 }
 
+/* Estilos para Filtro de Artista */
+.filtro-artista-container {
+    margin-bottom: 2rem;
+}
+
+.filtro-artista-container label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.filtro-artista-container select {
+    width: 100%;
+    max-width: 400px;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 2px solid #667eea;
+    border-radius: 5px;
+    background-color: white;
+    cursor: pointer;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.filtro-artista-container select:hover {
+    border-color: #764ba2;
+}
+
+.filtro-artista-container select:focus {
+    outline: none;
+    border-color: #764ba2;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
 .admin-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
