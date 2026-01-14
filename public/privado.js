@@ -1,11 +1,28 @@
 const API_URL = 'http://localhost:3000/api';
 
+const STORAGE_TOKEN_KEY = 'google_token';
+const STORAGE_USER_KEY = 'google_user';
+
+// Verificar se o utilizador está autenticado antes de carregar a página
+if (!localStorage.getItem(STORAGE_TOKEN_KEY)) {
+    window.location.href = 'login.html';
+}
+
 // Carregar dados ao iniciar a página
 document.addEventListener('DOMContentLoaded', () => {
     carregarColecoes();
     carregarItens();
     carregarListaColecoes();
     configurarFormularios();
+
+    const btnLogout = document.getElementById('btn-logout');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+            localStorage.removeItem(STORAGE_TOKEN_KEY);
+            localStorage.removeItem(STORAGE_USER_KEY);
+            window.location.href = 'login.html';
+        });
+    }
 });
 
 /**

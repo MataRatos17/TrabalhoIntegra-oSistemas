@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Museu Virtual da Escola - Login</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Biblioteca de Identity Services do Google -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <header>
+        <h1>Museu Virtual da Escola</h1>
+        <nav>
+            <a href="index.html">Exposição</a>
+            <a href="login.html" class="active">Área Privada</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="login-hero">
+            <h2>Entrar na Área Privada</h2>
+            <p>Use a sua conta Google para aceder à área de administração.</p>
+        </section>
+
+        <section class="login-container">
+            <div class="login-card">
+                <h3>Iniciar sessão com Google</h3>
+                <p class="login-info">
+                    Após o login, será redirecionado para a página de administração.
+                </p>
+
+                <!-- Configuração do botão Google (substituir SEU_CLIENT_ID) -->
+                <div id="g_id_onload"
+                    data-client_id="SEU_CLIENT_ID.apps.googleusercontent.com"
+                    data-context="signin"
+                    data-ux_mode="popup"
+                    data-callback="handleCredentialResponse"
+                    data-auto_prompt="false">
+                </div>
+
+                <div class="g_id_signin"
+                    data-type="standard"
+                    data-shape="rectangular"
+                    data-theme="outline"
+                    data-text="signin_with"
+                    data-size="large"
+                    data-logo_alignment="left">
+                </div>
+
+                <p class="login-note">
+                    Nota: peça ao professor o <strong>CLIENT_ID</strong> do Google ou crie um na consola Google Cloud
+                    e substitua o valor em <code>login.html</code>.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Museu Virtual da Escola</p>
+    </footer>
+
+    <script src="login.js"></script>
+</body>
+</html>
