@@ -37,13 +37,13 @@
       "colecao": "Desporto"
     },
     {
-      "titulo": "chewbacca",
-      "descricao": "Teste",
-      "categoria": "Fotografias",
+      "titulo": "joao",
+      "descricao": "Tudo o que eu quero",
+      "categoria": "Peças Históricas",
       "ano": 2024,
-      "foto": "https://i.pinimg.com/736x/db/5c/ba/db5cba17ad0b89b0a6232508745e1f4f.jpg",
-      "colecao": "Artes",
-      "id": 7
+      "foto": "https://images.unsplash.com/photo-1678483790053-71367bc7a02c?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1yZWxhdGVkfDE1fHx8ZW58MHx8fHx8",
+      "colecao": "Tecnologia",
+      "id": 8
     }
   ],
   "colecoes": [

@@ -5,7 +5,60 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarColecoes();
     carregarItens();
     carregarObrasArtePublica();
+    carregarArtistas();
 });
+
+/**
+ * Carrega lista de artistas vindos da API pública e popula a combobox
+ */
+async function carregarArtistas() {
+    const select = document.getElementById('select-artistas');
+    try {
+        const resposta = await fetch(`${API_URL}/arte-publica/artistas`);
+        const artistas = await resposta.json();
+
+        select.innerHTML = '';
+        const opcTodas = document.createElement('option');
+        opcTodas.value = '';
+        opcTodas.textContent = 'Todos';
+        select.appendChild(opcTodas);
+
+        artistas.forEach(nome => {
+            const opt = document.createElement('option');
+            opt.value = nome;
+            opt.textContent = nome;
+            select.appendChild(opt);
+        });
+
+        select.addEventListener('change', () => {
+            const val = select.value;
+            if (!val) {
+                carregarObrasArtePublica();
+            } else {
+                carregarObrasPorArtista(val);
+            }
+        });
+    } catch (erro) {
+        console.error('Erro ao carregar artistas:', erro);
+        select.innerHTML = '<option value="">Erro ao carregar artistas</option>';
+    }
+}
+
+/**
+ * Carrega até 6 obras de um artista selecionado
+ */
+async function carregarObrasPorArtista(artista) {
+    try {
+        const resposta = await fetch(`${API_URL}/arte-publica/por-artista?artist=${encodeURIComponent(artista)}`);
+        const obras = await resposta.json();
+
+        exibirObrasArte(obras);
+    } catch (erro) {
+        console.error('Erro ao carregar obras por artista:', erro);
+        const container = document.getElementById('obras-arte-container');
+        container.innerHTML = '<p>Erro ao carregar obras deste artista.</p>';
+    }
+}
 
 /**
  * Carrega todas as coleções e cria os botões de filtro
@@ -205,6 +258,11 @@ function exibirObrasArte(obras) {
                 <h3>${obra.titulo}</h3>
                 <span class="artista">${obra.artista}</span>
                 <p class="data">${obra.data || 'Data não disponível'}</p>
+                <p class="contexto"><strong>Contexto cultural:</strong> ${obra.culture || '—'}</p>
+                <p class="periodo"><strong>Período histórico:</strong> ${obra.period || '—'}</p>
+                <p class="departamento"><strong>Coleção:</strong> ${obra.department || '—'}</p>
+                <p class="material"><strong>Material:</strong> ${obra.medium || '—'}</p>
+                <p class="dimensoes"><strong>Dimensão:</strong> ${obra.dimensions || '—'}</p>
             </div>
         `;
         

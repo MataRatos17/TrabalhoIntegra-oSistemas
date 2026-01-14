@@ -247,7 +247,7 @@ app.get('/api/arte-publica', (req, res) => {
                     const searchResult = JSON.parse(searchData);
                     
                     // Pegar os primeiros 5 objectIDs
-                    const objectIDs = searchResult.objectIDs ? searchResult.objectIDs.slice(0, 5) : [];
+                    const objectIDs = searchResult.objectIDs ? searchResult.objectIDs.slice(0, 10) : [];
                     
                     if (objectIDs.length === 0) {
                         return res.json([]);
@@ -316,6 +316,88 @@ app.get('/api/arte-publica', (req, res) => {
     } catch (error) {
         console.error('Erro ao buscar API pública:', error);
         res.status(500).json({ erro: 'Erro ao buscar dados da API pública' });
+    }
+});
+
+// Helper to GET JSON via HTTPS
+function httpsGetJson(url) {
+    return new Promise((resolve, reject) => {
+        https.get(url, (resp) => {
+            let data = '';
+            resp.on('data', (chunk) => data += chunk);
+            resp.on('end', () => {
+                try {
+                    resolve(JSON.parse(data));
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        }).on('error', (err) => reject(err));
+    });
+}
+
+// Retorna lista de artistas únicos (a partir dos objectIDs pesquisados)
+app.get('/api/arte-publica/artistas', async (req, res) => {
+    try {
+        const baseUrl = 'https://collectionapi.metmuseum.org/public/collection/v1';
+        const searchUrl = `${baseUrl}/search?q=*&hasImages=true`;
+
+        const searchResult = await httpsGetJson(searchUrl);
+        const objectIDs = searchResult.objectIDs ? searchResult.objectIDs.slice(0, 500) : [];
+
+        const promises = objectIDs.map(id => httpsGetJson(`${baseUrl}/objects/${id}`).catch(() => null));
+        const objetos = await Promise.all(promises);
+
+        const artistasSet = new Set();
+        objetos.forEach(obj => {
+            if (!obj) return;
+            const nome = (obj.artistDisplayName || obj.artistAlphaSort || '').trim();
+            if (nome) artistasSet.add(nome);
+        });
+
+        const artistas = Array.from(artistasSet).sort((a, b) => a.localeCompare(b));
+        res.json(artistas);
+    } catch (error) {
+        console.error('Erro ao carregar artistas da API pública:', error);
+        res.status(500).json({ erro: 'Erro ao carregar artistas da API pública' });
+    }
+});
+
+// Retorna até 6 obras de um artista especificado via query string ?artist=Nome+do+Artista
+app.get('/api/arte-publica/por-artista', async (req, res) => {
+    try {
+        const artistQuery = req.query.artist;
+        if (!artistQuery) return res.status(400).json({ erro: 'Parâmetro `artist` é obrigatório' });
+        const baseUrl = 'https://collectionapi.metmuseum.org/public/collection/v1';
+
+        // Usar o endpoint de search filtrando por artista/cultura para obter objectIDs relevantes
+        const searchUrl = `${baseUrl}/search?artistOrCulture=true&hasImages=true&q=${encodeURIComponent(artistQuery)}`;
+        const searchResult = await httpsGetJson(searchUrl);
+        const objectIDs = searchResult.objectIDs ? searchResult.objectIDs.slice(0, 100) : [];
+
+        const obras = [];
+        for (const id of objectIDs) {
+            if (obras.length >= 6) break;
+            try {
+                const obj = await httpsGetJson(`${baseUrl}/objects/${id}`);
+                if (!obj) continue;
+                const imagem = obj.primaryImageSmall || obj.primaryImage || null;
+                obras.push({
+                    id: obj.objectID,
+                    titulo: obj.title || 'Sem título',
+                    artista: (obj.artistDisplayName || obj.artistAlphaSort || 'Artista desconhecido'),
+                    data: obj.objectDate || obj.objectBeginDate || 'Data desconhecida',
+                    imagem: imagem
+                });
+            } catch (err) {
+                // ignorar erro e continuar
+            }
+        }
+
+        res.json(obras);
+    } catch (error) {
+        console.error('Erro ao buscar obras por artista:', error);
+        res.status(500).json({ erro: 'Erro ao buscar obras por artista' });
     }
 });
 
