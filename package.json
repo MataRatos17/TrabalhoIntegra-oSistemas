@@ -5,8 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node api/server.js",
-    "api:start": "node api/server.js"
-    ,"app:start": "node server.js"
+    "api:start": "node api/server.js",
+    "app:start": "node server.js"
   },
   "keywords": [
     "museu",

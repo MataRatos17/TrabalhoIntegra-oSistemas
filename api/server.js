@@ -176,6 +176,78 @@ app.post('/api/colecoes', (req, res) => {
     }
 });
 
+// ========== ENDPOINTS PARA ATUALIZAR ==========
+
+// Atualizar item
+app.put('/api/itens/:id', (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        console.log(`PUT /api/itens/${id}`, req.body);
+        
+        const indice = dadosMuseu.itens.findIndex(i => i.id === id);
+        
+        if (indice === -1) {
+            console.log(`Item ${id} não encontrado`);
+            return res.status(404).json({ erro: 'Item não encontrado' });
+        }
+        
+        const itemAtualizado = req.body;
+        
+        // Validar dados obrigatórios
+        if (!itemAtualizado.titulo || !itemAtualizado.descricao || !itemAtualizado.categoria) {
+            return res.status(400).json({ erro: 'Dados incompletos' });
+        }
+        
+        // Manter o ID original
+        itemAtualizado.id = id;
+        
+        // Atualizar o item
+        dadosMuseu.itens[indice] = itemAtualizado;
+        guardarDados();
+        
+        console.log(`Item ${id} atualizado com sucesso`);
+        res.json(itemAtualizado);
+    } catch (error) {
+        console.error('Erro ao atualizar item:', error);
+        res.status(500).json({ erro: 'Erro ao atualizar item' });
+    }
+});
+
+// Atualizar coleção
+app.put('/api/colecoes/:id', (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        console.log(`PUT /api/colecoes/${id}`, req.body);
+        
+        const indice = dadosMuseu.colecoes.findIndex(c => c.id === id);
+        
+        if (indice === -1) {
+            console.log(`Coleção ${id} não encontrada`);
+            return res.status(404).json({ erro: 'Coleção não encontrada' });
+        }
+        
+        const colecaoAtualizada = req.body;
+        
+        // Validar dados obrigatórios
+        if (!colecaoAtualizada.nome || !colecaoAtualizada.descricao) {
+            return res.status(400).json({ erro: 'Dados incompletos' });
+        }
+        
+        // Manter o ID original
+        colecaoAtualizada.id = id;
+        
+        // Atualizar a coleção
+        dadosMuseu.colecoes[indice] = colecaoAtualizada;
+        guardarDados();
+        
+        console.log(`Coleção ${id} atualizada com sucesso`);
+        res.json(colecaoAtualizada);
+    } catch (error) {
+        console.error('Erro ao atualizar coleção:', error);
+        res.status(500).json({ erro: 'Erro ao atualizar coleção' });
+    }
+});
+
 // ========== ENDPOINTS PARA APAGAR ==========
 
 // Apagar item
