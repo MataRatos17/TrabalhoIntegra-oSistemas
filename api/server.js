@@ -152,25 +152,44 @@ app.get('/api/colecoes/:nome/itens', (req, res) => {
 // Adicionar novo item (usado na área de administração)
 // FLUXO PRINCIPAL:
 // 1) Lemos o corpo do pedido (req.body) para obter o novo item.
-// 2) Fazemos trim às principais strings para evitar espaços em branco.
-// 3) SE algum dos campos obrigatórios (titulo, descricao, categoria, colecao)
-//    ficar vazio após o trim ENTÃO devolvemos 400 com mensagem de dados incompletos.
-// 4) SE estiver tudo preenchido ENTÃO geramos um novo ID, definimos ano (se vier vazio)
-//    e garantimos que foto pelo menos existe como string (pode ser vazia).
-// 5) Adicionamos o item ao array, guardamos no ficheiro e devolvemos 201 com o item.
+// 2) Fazemos trim a TODAS as strings para evitar espaços em branco.
+// 3) Validamos que TODOS os campos obrigatórios (titulo, descricao, categoria, colecao, foto, ano)
+//    estão preenchidos e não vazios após o trim.
+// 4) SE algum campo obrigatório ficar vazio ENTÃO devolvemos 400 com mensagem específica de erro.
+// 5) SE estiver tudo preenchido ENTÃO geramos um novo ID, adicionamos o item ao array,
+//    guardamos no ficheiro e devolvemos 201 com o item.
 app.post('/api/itens', (req, res) => {
     try {
         const novoItem = req.body;
 
-        // Normalizar (trim) strings
+        // Normalizar (trim) TODAS as strings
         novoItem.titulo = (novoItem.titulo || '').trim();
         novoItem.descricao = (novoItem.descricao || '').trim();
         novoItem.categoria = (novoItem.categoria || '').trim();
         novoItem.colecao = (novoItem.colecao || '').trim();
+        novoItem.foto = (novoItem.foto || '').trim();
+        novoItem.ano = String(novoItem.ano || '').trim();
         
-        // Validar dados obrigatórios (não permitir strings vazias)
-        if (!novoItem.titulo || !novoItem.descricao || !novoItem.categoria || !novoItem.colecao) {
-            return res.status(400).json({ erro: 'Dados incompletos. Preencha título, descrição, categoria e coleção.' });
+        // Validar TODOS os dados obrigatórios (não permitir strings vazias)
+        const camposVazios = [];
+        
+        if (!novoItem.titulo) camposVazios.push('título');
+        if (!novoItem.descricao) camposVazios.push('descrição');
+        if (!novoItem.categoria) camposVazios.push('categoria');
+        if (!novoItem.colecao) camposVazios.push('coleção');
+        if (!novoItem.foto) camposVazios.push('foto');
+        if (!novoItem.ano) camposVazios.push('ano');
+        
+        if (camposVazios.length > 0) {
+            return res.status(400).json({ 
+                erro: `Dados incompletos. Os seguintes campos são obrigatórios: ${camposVazios.join(', ')}.` 
+            });
+        }
+        
+        // Validar ano como número
+        const anoNum = parseInt(novoItem.ano);
+        if (isNaN(anoNum) || anoNum < 0 || anoNum > new Date().getFullYear()) {
+            return res.status(400).json({ erro: 'Ano deve ser um número válido entre 0 e o ano atual.' });
         }
         
         // Gerar novo ID
@@ -179,11 +198,7 @@ app.post('/api/itens', (req, res) => {
             : 1;
         
         novoItem.id = novoId;
-        novoItem.ano = novoItem.ano || new Date().getFullYear();
-        // Não definir foto se não fornecida - será tratado no frontend
-        if (!novoItem.foto || novoItem.foto.trim() === '') {
-            novoItem.foto = '';
-        }
+        novoItem.ano = anoNum;
         
         dadosMuseu.itens.push(novoItem);
         guardarDados();
@@ -196,22 +211,37 @@ app.post('/api/itens', (req, res) => {
 
 // Criar nova coleção (usado na área de administração)
 // FLUXO PRINCIPAL:
-// 1) Lemos o corpo do pedido e fazemos trim ao nome e descrição.
-// 2) SE nome ou descrição ficarem vazios ENTÃO devolvemos 400 (dados incompletos).
-// 3) Verificamos SE já existe coleção com o mesmo nome; se existir devolvemos 400.
-// 4) SE tudo estiver correto ENTÃO geramos um novo ID, definimos uma cor (ou padrão),
-//    guardamos no array e persistimos no ficheiro, devolvendo 201 com a coleção criada.
+// 1) Lemos o corpo do pedido e fazemos trim a TODAS as strings.
+// 2) Validamos que TODOS os campos obrigatórios (nome, descrição, cor) estão preenchidos.
+// 3) SE algum campo obrigatório ficar vazio ENTÃO devolvemos 400 com mensagem específica.
+// 4) Verificamos SE já existe coleção com o mesmo nome; se existir devolvemos 400.
+// 5) SE tudo estiver correto ENTÃO geramos um novo ID, guardamos no array
+//    e persistimos no ficheiro, devolvendo 201 com a coleção criada.
 app.post('/api/colecoes', (req, res) => {
     try {
         const novaColecao = req.body;
 
-        // Normalizar (trim) strings
+        // Normalizar (trim) TODAS as strings
         novaColecao.nome = (novaColecao.nome || '').trim();
         novaColecao.descricao = (novaColecao.descricao || '').trim();
+        novaColecao.cor = (novaColecao.cor || '').trim();
         
-        // Validar dados obrigatórios (não permitir strings vazias)
-        if (!novaColecao.nome || !novaColecao.descricao) {
-            return res.status(400).json({ erro: 'Dados incompletos. Preencha nome e descrição da coleção.' });
+        // Validar TODOS os dados obrigatórios (não permitir strings vazias)
+        const camposVazios = [];
+        
+        if (!novaColecao.nome) camposVazios.push('nome');
+        if (!novaColecao.descricao) camposVazios.push('descrição');
+        if (!novaColecao.cor) camposVazios.push('cor');
+        
+        if (camposVazios.length > 0) {
+            return res.status(400).json({ 
+                erro: `Dados incompletos. Os seguintes campos são obrigatórios: ${camposVazios.join(', ')}.` 
+            });
+        }
+        
+        // Validar formato da cor (hex color)
+        if (!/^#[0-9A-Fa-f]{6}$/.test(novaColecao.cor)) {
+            return res.status(400).json({ erro: 'Cor deve ser um valor hexadecimal válido (ex: #FF0000).' });
         }
         
         // Verificar se já existe
@@ -226,7 +256,6 @@ app.post('/api/colecoes', (req, res) => {
             : 1;
         
         novaColecao.id = novoId;
-        novaColecao.cor = novaColecao.cor || '#6C757D';
         
         dadosMuseu.colecoes.push(novaColecao);
         guardarDados();
@@ -245,9 +274,10 @@ app.post('/api/colecoes', (req, res) => {
 // FLUXO PRINCIPAL:
 // 1) Lemos o id da rota e procuramos o índice do item na lista.
 //    - SE não existir item com esse id ENTÃO devolvemos 404.
-// 2) Fazemos trim às principais strings vindas do body.
-// 3) SE após o trim algum campo obrigatório ficar vazio ENTÃO devolvemos 400.
-// 4) SE estiver tudo válido ENTÃO mantemos o id original, substituímos o objeto no array
+// 2) Fazemos trim a TODAS as strings vindas do body.
+// 3) Validamos que TODOS os campos obrigatórios estão preenchidos e não vazios.
+// 4) SE algum campo obrigatório ficar vazio ENTÃO devolvemos 400 com mensagem específica.
+// 5) SE estiver tudo válido ENTÃO mantemos o id original, substituímos o objeto no array
 //    e guardamos os dados em disco; no final, devolvemos o item atualizado.
 app.put('/api/itens/:id', (req, res) => {
     try {
@@ -263,19 +293,39 @@ app.put('/api/itens/:id', (req, res) => {
         
         const itemAtualizado = req.body;
 
-        // Normalizar (trim) strings
+        // Normalizar (trim) TODAS as strings
         itemAtualizado.titulo = (itemAtualizado.titulo || '').trim();
         itemAtualizado.descricao = (itemAtualizado.descricao || '').trim();
         itemAtualizado.categoria = (itemAtualizado.categoria || '').trim();
         itemAtualizado.colecao = (itemAtualizado.colecao || '').trim();
+        itemAtualizado.foto = (itemAtualizado.foto || '').trim();
+        itemAtualizado.ano = String(itemAtualizado.ano || '').trim();
         
-        // Validar dados obrigatórios
-        if (!itemAtualizado.titulo || !itemAtualizado.descricao || !itemAtualizado.categoria || !itemAtualizado.colecao) {
-            return res.status(400).json({ erro: 'Dados incompletos. Preencha título, descrição, categoria e coleção.' });
+        // Validar TODOS os dados obrigatórios
+        const camposVazios = [];
+        
+        if (!itemAtualizado.titulo) camposVazios.push('título');
+        if (!itemAtualizado.descricao) camposVazios.push('descrição');
+        if (!itemAtualizado.categoria) camposVazios.push('categoria');
+        if (!itemAtualizado.colecao) camposVazios.push('coleção');
+        if (!itemAtualizado.foto) camposVazios.push('foto');
+        if (!itemAtualizado.ano) camposVazios.push('ano');
+        
+        if (camposVazios.length > 0) {
+            return res.status(400).json({ 
+                erro: `Dados incompletos. Os seguintes campos são obrigatórios: ${camposVazios.join(', ')}.` 
+            });
+        }
+        
+        // Validar ano como número
+        const anoNum = parseInt(itemAtualizado.ano);
+        if (isNaN(anoNum) || anoNum < 0 || anoNum > new Date().getFullYear()) {
+            return res.status(400).json({ erro: 'Ano deve ser um número válido entre 0 e o ano atual.' });
         }
         
         // Manter o ID original
         itemAtualizado.id = id;
+        itemAtualizado.ano = anoNum;
         
         // Atualizar o item
         dadosMuseu.itens[indice] = itemAtualizado;
@@ -293,9 +343,10 @@ app.put('/api/itens/:id', (req, res) => {
 // FLUXO PRINCIPAL:
 // 1) Lemos o id da rota e procuramos o índice da coleção.
 //    - SE não encontrar ENTÃO devolvemos 404.
-// 2) Fazemos trim ao nome e descrição recebidos.
-// 3) SE algum destes campos estiver vazio ENTÃO devolvemos 400.
-// 4) Caso contrário, mantemos o id, atualizamos o array, gravamos no ficheiro
+// 2) Fazemos trim a TODAS as strings recebidas.
+// 3) Validamos que TODOS os campos obrigatórios estão preenchidos e não vazios.
+// 4) SE algum campo obrigatório ficar vazio ENTÃO devolvemos 400 com mensagem específica.
+// 5) Caso contrário, mantemos o id, atualizamos o array, gravamos no ficheiro
 //    e devolvemos a coleção atualizada.
 app.put('/api/colecoes/:id', (req, res) => {
     try {
@@ -311,13 +362,27 @@ app.put('/api/colecoes/:id', (req, res) => {
         
         const colecaoAtualizada = req.body;
 
-        // Normalizar (trim) strings
+        // Normalizar (trim) TODAS as strings
         colecaoAtualizada.nome = (colecaoAtualizada.nome || '').trim();
         colecaoAtualizada.descricao = (colecaoAtualizada.descricao || '').trim();
+        colecaoAtualizada.cor = (colecaoAtualizada.cor || '').trim();
         
-        // Validar dados obrigatórios
-        if (!colecaoAtualizada.nome || !colecaoAtualizada.descricao) {
-            return res.status(400).json({ erro: 'Dados incompletos. Preencha nome e descrição da coleção.' });
+        // Validar TODOS os dados obrigatórios
+        const camposVazios = [];
+        
+        if (!colecaoAtualizada.nome) camposVazios.push('nome');
+        if (!colecaoAtualizada.descricao) camposVazios.push('descrição');
+        if (!colecaoAtualizada.cor) camposVazios.push('cor');
+        
+        if (camposVazios.length > 0) {
+            return res.status(400).json({ 
+                erro: `Dados incompletos. Os seguintes campos são obrigatórios: ${camposVazios.join(', ')}.` 
+            });
+        }
+        
+        // Validar formato da cor (hex color)
+        if (!/^#[0-9A-Fa-f]{6}$/.test(colecaoAtualizada.cor)) {
+            return res.status(400).json({ erro: 'Cor deve ser um valor hexadecimal válido (ex: #FF0000).' });
         }
         
         // Manter o ID original
