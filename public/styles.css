@@ -328,6 +328,24 @@ main {
 .item-card .ano {
     color: #999;
     font-size: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.item-card .detalhes {
+    border-top: 1px solid #e0e0e0;
+    padding-top: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.item-card .detalhes p {
+    color: #555;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+.item-card .detalhes strong {
+    color: #667eea;
+    font-weight: 600;
 }
 
 .api-publica {

@@ -268,7 +268,14 @@ function criarCardItem(item) {
             <h3>${item.titulo}</h3>
             <span class="categoria">${item.categoria}</span>
             <p class="descricao">${item.descricao}</p>
-            <p class="ano">Ano: ${item.ano} | Coleção: ${item.colecao}</p>
+            <p class="ano">Ano: ${item.ano}</p>
+            <div class="detalhes">
+                <p><strong>Contexto cultural:</strong> ${item.contexto_cultural || '—'}</p>
+                <p><strong>Período histórico:</strong> ${item.periodo_historico || '—'}</p>
+                <p><strong>Coleção:</strong> ${item.colecao || '—'}</p>
+                <p><strong>Material:</strong> ${item.material || '—'}</p>
+                <p><strong>Dimensão:</strong> ${item.dimensao || '—'}</p>
+            </div>
         </div>
     `;
     
@@ -317,11 +324,13 @@ function exibirObrasArte(obras) {
                 <h3>${obra.titulo}</h3>
                 <span class="artista">${obra.artista}</span>
                 <p class="data">${obra.data || 'Data não disponível'}</p>
-                <p class="contexto"><strong>Contexto cultural:</strong> ${obra.culture || '—'}</p>
-                <p class="periodo"><strong>Período histórico:</strong> ${obra.period || '—'}</p>
-                <p class="departamento"><strong>Coleção:</strong> ${obra.department || '—'}</p>
-                <p class="material"><strong>Material:</strong> ${obra.medium || '—'}</p>
-                <p class="dimensoes"><strong>Dimensão:</strong> ${obra.dimensions || '—'}</p>
+                <div class="detalhes">
+                    <p><strong>Contexto cultural:</strong> ${obra.contexto_cultural || '—'}</p>
+                    <p><strong>Período histórico:</strong> ${obra.periodo_historico || '—'}</p>
+                    <p><strong>Coleção:</strong> ${obra.colecao || '—'}</p>
+                    <p><strong>Material:</strong> ${obra.material || '—'}</p>
+                    <p><strong>Dimensão:</strong> ${obra.dimensao || '—'}</p>
+                </div>
             </div>
         `;
         

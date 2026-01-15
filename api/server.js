@@ -153,8 +153,8 @@ app.get('/api/colecoes/:nome/itens', (req, res) => {
 // FLUXO PRINCIPAL:
 // 1) Lemos o corpo do pedido (req.body) para obter o novo item.
 // 2) Fazemos trim a TODAS as strings para evitar espaços em branco.
-// 3) Validamos que TODOS os campos obrigatórios (titulo, descricao, categoria, colecao, foto, ano)
-//    estão preenchidos e não vazios após o trim.
+// 3) Validamos que TODOS os campos obrigatórios (titulo, descricao, categoria, colecao, foto, ano,
+//    contexto_cultural, periodo_historico, material, dimensao) estão preenchidos e não vazios.
 // 4) SE algum campo obrigatório ficar vazio ENTÃO devolvemos 400 com mensagem específica de erro.
 // 5) SE estiver tudo preenchido ENTÃO geramos um novo ID, adicionamos o item ao array,
 //    guardamos no ficheiro e devolvemos 201 com o item.
@@ -169,6 +169,10 @@ app.post('/api/itens', (req, res) => {
         novoItem.colecao = (novoItem.colecao || '').trim();
         novoItem.foto = (novoItem.foto || '').trim();
         novoItem.ano = String(novoItem.ano || '').trim();
+        novoItem.contexto_cultural = (novoItem.contexto_cultural || '').trim();
+        novoItem.periodo_historico = (novoItem.periodo_historico || '').trim();
+        novoItem.material = (novoItem.material || '').trim();
+        novoItem.dimensao = (novoItem.dimensao || '').trim();
         
         // Validar TODOS os dados obrigatórios (não permitir strings vazias)
         const camposVazios = [];
@@ -179,6 +183,10 @@ app.post('/api/itens', (req, res) => {
         if (!novoItem.colecao) camposVazios.push('coleção');
         if (!novoItem.foto) camposVazios.push('foto');
         if (!novoItem.ano) camposVazios.push('ano');
+        if (!novoItem.contexto_cultural) camposVazios.push('contexto cultural');
+        if (!novoItem.periodo_historico) camposVazios.push('período histórico');
+        if (!novoItem.material) camposVazios.push('material');
+        if (!novoItem.dimensao) camposVazios.push('dimensão');
         
         if (camposVazios.length > 0) {
             return res.status(400).json({ 
@@ -300,6 +308,10 @@ app.put('/api/itens/:id', (req, res) => {
         itemAtualizado.colecao = (itemAtualizado.colecao || '').trim();
         itemAtualizado.foto = (itemAtualizado.foto || '').trim();
         itemAtualizado.ano = String(itemAtualizado.ano || '').trim();
+        itemAtualizado.contexto_cultural = (itemAtualizado.contexto_cultural || '').trim();
+        itemAtualizado.periodo_historico = (itemAtualizado.periodo_historico || '').trim();
+        itemAtualizado.material = (itemAtualizado.material || '').trim();
+        itemAtualizado.dimensao = (itemAtualizado.dimensao || '').trim();
         
         // Validar TODOS os dados obrigatórios
         const camposVazios = [];
@@ -310,6 +322,10 @@ app.put('/api/itens/:id', (req, res) => {
         if (!itemAtualizado.colecao) camposVazios.push('coleção');
         if (!itemAtualizado.foto) camposVazios.push('foto');
         if (!itemAtualizado.ano) camposVazios.push('ano');
+        if (!itemAtualizado.contexto_cultural) camposVazios.push('contexto cultural');
+        if (!itemAtualizado.periodo_historico) camposVazios.push('período histórico');
+        if (!itemAtualizado.material) camposVazios.push('material');
+        if (!itemAtualizado.dimensao) camposVazios.push('dimensão');
         
         if (camposVazios.length > 0) {
             return res.status(400).json({ 
@@ -628,16 +644,47 @@ app.get('/api/arte-publica/artistas', async (req, res) => {
             }
         });
 
-        const artistas = Array.from(artistasMap.values())
+        // Filtrar artistas que realmente têm obras
+        const artistasParaValidar = Array.from(artistasMap.values());
+        console.log(`Validando ${artistasParaValidar.length} artistas para ver se têm obras...`);
+        
+        const artistasComObras = [];
+        
+        for (const artista of artistasParaValidar) {
+            try {
+                // Decodificar nome do artista
+                const nomeArtista = Buffer.from(artista.id, 'base64').toString('utf-8');
+                
+                // Buscar obras deste artista
+                const obraSearchUrl = `${baseUrl}/search?artistOrCulture=true&hasImages=true&q=${encodeURIComponent(nomeArtista)}`;
+                const obraSearchResult = await Promise.race([
+                    httpsGetJson(obraSearchUrl),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+                ]);
+                
+                const temObras = obraSearchResult.objectIDs && obraSearchResult.objectIDs.length > 0;
+                
+                if (temObras) {
+                    artistasComObras.push(artista);
+                    console.log(`✓ ${nomeArtista} tem ${obraSearchResult.objectIDs.length} obras`);
+                } else {
+                    console.log(`✗ ${nomeArtista} não tem obras`);
+                }
+            } catch (err) {
+                console.log(`! Erro ao validar ${artista.nome}:`, err.message);
+            }
+        }
+        
+        const artistasFinais = artistasComObras
             .sort((a, b) => a.nome.localeCompare(b.nome))
             .slice(0, 50);
         
         // Guardar em cache
-        cacheArtistas = artistas;
+        cacheArtistas = artistasFinais;
         cacheArtistasTimestamp = agora;
         
-        console.log(`Retornando ${artistas.length} artistas`);
-        res.json(artistas);
+        console.log(`Retornando ${artistasFinais.length} artistas com obras`);
+        res.json(artistasFinais);
     } catch (error) {
         console.error('Erro ao carregar artistas da API pública:', error.message);
         // Se falhar, tentar retornar o cache antigo
@@ -695,15 +742,24 @@ app.get('/api/arte-publica/artista/:artistId', async (req, res) => {
                 const imagem = obj.primaryImageSmall || obj.primaryImage || null;
                 if (!imagem) continue;
                 
+                // Extração inteligente de dados
+                const contexto = obj.culture || obj.classification || 'Contexto não disponível';
+                const periodo = obj.period || obj.objectBeginDate || obj.objectDate || 'Período não disponível';
+                const colecao = obj.department || 'Coleção não disponível';
+                const material = obj.medium || 'Material não disponível';
+                const dimensao = obj.dimensions || 'Dimensão não disponível';
+                
                 obras.push({
                     id: obj.objectID,
                     titulo: obj.title || 'Sem título',
                     artista: (obj.artistDisplayName || obj.artistAlphaSort || 'Artista desconhecido'),
                     data: obj.objectDate || obj.objectBeginDate || 'Data desconhecida',
                     imagem: imagem,
-                    departamento: obj.department || '',
-                    material: obj.medium || '',
-                    dimensoes: obj.dimensions || ''
+                    contexto_cultural: contexto,
+                    periodo_historico: String(periodo),
+                    colecao: colecao,
+                    material: material,
+                    dimensao: dimensao
                 });
             } catch (err) {
                 console.error(`Erro ao buscar objeto ${id}:`, err.message);

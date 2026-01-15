@@ -7,7 +7,11 @@
       "categoria": "Projetos",
       "ano": 2023,
       "foto": "https://via.placeholder.com/400x300?text=Robótica+2023",
-      "colecao": "Tecnologia"
+      "colecao": "Tecnologia",
+      "contexto_cultural": "Educação STEM moderna",
+      "periodo_historico": "Século XXI",
+      "material": "Alumínio, plástico, circuitos eletrónicos",
+      "dimensao": "30cm x 40cm x 50cm"
     },
     {
       "id": 2,
@@ -16,51 +20,71 @@
       "categoria": "Fotografias",
       "ano": 1985,
       "foto": "https://via.placeholder.com/400x300?text=Foto+Histórica+1985",
-      "colecao": "História"
+      "colecao": "História",
+      "contexto_cultural": "História da educação portuguesa",
+      "periodo_historico": "Anos 80",
+      "material": "Papel fotográfico e revelação química",
+      "dimensao": "20cm x 25cm"
     },
     {
+      "id": 3,
       "titulo": "Maquete do Sistema Solar",
-      "descricao": "Maquete detalhada do e ciências.",
+      "descricao": "Maquete detalhada do sistema solar com modelos em escala",
       "categoria": "Projetos",
       "ano": 2024,
       "foto": "https://via.placeholder.com/400x300?text=Sistema+Solar",
       "colecao": "Ciências",
-      "id": 3
+      "contexto_cultural": "Educação científica e astronomia",
+      "periodo_historico": "Século XXI",
+      "material": "Poliestireno, tinta acrílica, metal",
+      "dimensao": "120cm de diâmetro"
     },
     {
-      "titulo": "Troféu de ",
+      "id": 4,
+      "titulo": "Troféu de Atletismo",
       "descricao": "Troféu conquistado pela equipa de atletismo nos campeonatos regionais de 2022.",
       "categoria": "Peças Históricas",
       "ano": 2022,
       "foto": "https://via.placeholder.com/400x300?text=Troféu+Atletismo",
       "colecao": "Desporto",
-      "id": 4
+      "contexto_cultural": "Desporto competitivo português",
+      "periodo_historico": "Século XXI",
+      "material": "Bronze e madeira",
+      "dimensao": "35cm de altura"
     },
     {
       "id": 8,
-      "titulo": "Testes",
-      "descricao": "Mano triste",
+      "titulo": "Testes de Materiais",
+      "descricao": "Amostras de diversos materiais utilizados em projectos educacionais",
       "categoria": "Peças Históricas",
       "ano": 2021,
       "foto": "https://images.unsplash.com/photo-1678483790053-71367bc7a02c?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1yZWxhdGVkfDE1fHx8ZW58MHx8fHx8",
-      "colecao": "Ciências"
+      "colecao": "Ciências",
+      "contexto_cultural": "Educação em ciências dos materiais",
+      "periodo_historico": "Século XXI",
+      "material": "Diversos materiais (metal, plástico, vidro)",
+      "dimensao": "Várias dimensões"
     },
     {
-      "titulo": "ADSFGADFG",
-      "descricao": "GFFFFFGG",
+      "id": 9,
+      "titulo": "Projeto de Arte Contemporânea",
+      "descricao": "Instalação artística criada por alunos do curso de artes",
       "categoria": "Fotografias",
       "ano": 2020,
-      "colecao": "rer",
-      "id": 9,
-      "foto": ""
+      "colecao": "Artes",
+      "foto": "https://via.placeholder.com/400x300?text=Arte+Contemporânea",
+      "contexto_cultural": "Arte contemporânea portuguesa",
+      "periodo_historico": "Século XXI",
+      "material": "Diversos materiais reciclados",
+      "dimensao": "250cm x 150cm x 100cm"
     }
   ],
   "colecoes": [
     {
+      "id": 1,
       "nome": "Tecnologia",
-      "descricao": "Projetos relacionados com tecnologia inovação",
-      "cor": "#4a90e2",
-      "id": 1
+      "descricao": "Projetos relacionados com tecnologia e inovação",
+      "cor": "#4a90e2"
     },
     {
       "id": 2,
@@ -85,12 +109,6 @@
       "nome": "Artes",
       "descricao": "Obras de arte e projetos artísticos",
       "cor": "#9B59B6"
-    },
-    {
-      "nome": "rer",
-      "descricao": "Teste",
-      "cor": "#0a0a0a",
-      "id": 6
     }
   ]
 }

@@ -11,6 +11,14 @@ const app = express();
 // Porta do servidor da aplicação (diferente da porta da API 3000)
 const PORT = process.env.APP_PORT || process.env.PORT || 8080;
 
+// Middleware para evitar cache de arquivos estáticos
+app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    next();
+});
+
 // Servir ficheiros estáticos da pasta public
 app.use(express.static(path.join(__dirname, 'public')));
 
